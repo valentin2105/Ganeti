@@ -2,17 +2,16 @@
 
 # Ecrit par Valentin OUVRARD, 2015
 
-# Ce script permet de créer ou cloner une VM sous Ganeti avec Xen.
+# This script create or clone VMs on Debian 8 or Ubuntu 14.04.
 
-# Actuellement ce script supporte 3 modes, Debian 8, Ubuntu 14.04 et clonage d'une VM existante.
 
 ###############################################################
-#################### Paramètres de Ganeti #####################
+#################### Ganeti Configuration #####################
 ###############################################################
-# Le master correspont au node par défaut à la création
+# Ganeti master hostname
 GNT_MASTER="gnt-master.hostname"
 
-# Ce node correspond au deuxième node par défaut
+# Any Ganeti Node for secondary DRBD
 GNT_NODE="secondary-node.hostname"
 
 DEFAULT_VLAN=""
