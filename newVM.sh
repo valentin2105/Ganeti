@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Ecrit par Valentin OUVRARD pour Nautile.NC 2015
+# Ecrit par Valentin OUVRARD, 2015
 
 # Ce script permet de créer ou cloner une VM sous Ganeti avec Xen.
 
@@ -10,10 +10,10 @@
 #################### Paramètres de Ganeti #####################
 ###############################################################
 # Le master correspont au node par défaut à la création
-GNT_MASTER="a2.nautile.in"
+GNT_MASTER="gnt-master.hostname"
 
 # Ce node correspond au deuxième node par défaut
-GNT_NODE="a3.nautile.in"
+GNT_NODE="secondary-node.hostname"
 
 DEFAULT_VLAN=""
 
@@ -782,7 +782,7 @@ fi
 ## Debootstrap ou NTLDEB (clonage)
 if [ -z $CLONE ]
 	then METHOD="debootstrap"
-    else METHOD="ntldeb8"
+    else METHOD="clone"
 fi
 
 ###############################################################
@@ -996,7 +996,7 @@ if [ "$vg_code" == "1" ]
 			exit 1
 fi
 
-## Fichier de conf (deboostrap / ntldeb/ variants ...)
+## Fichier de conf (deboostrap / clone/ variants ...)
 if [ ! -f /usr/share/ganeti/os/debootstrap/create ]
 	then 	echo
 			echo "La configuration de Ganeti (debootstrap) semble incorrecte..."
@@ -1021,9 +1021,9 @@ if [ ! -f /etc/ganeti/instance-debootstrap/variants/trusty.conf ]
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
-if [ ! -f /usr/share/ganeti/os/ntldeb8/create ]
+if [ ! -f /usr/share/ganeti/os/clone/create ]
 	then 	echo
-			echo "La configuration de Ganeti (ntldeb8) semble incorrecte..."
+			echo "La configuration de Ganeti (clone) semble incorrecte..."
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1120,7 +1120,7 @@ fi
 ## NtlDEB (Clonage)
 ###############################################################
 
-if [ "$METHOD" == "ntldeb8" ]
+if [ "$METHOD" == "clone" ]
 then	
 
 	tput bold; echo "Vérification de la VM à cloner ..." ; tput sgr0 
