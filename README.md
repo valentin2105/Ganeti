@@ -21,6 +21,7 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 * **"os"** folder is for /usr/share/ganeti/os/
 * **"instance-debootstrap"** is for /etc/ganeti-instance-debootstrap
 * Folders **/srv/ganeti/vminitlog** and **/srv/ganeti/vmcreation** must exist
+* Ganeti configured with default "kernel_path" on dom0's kernel & the same for "initrd_path". 
 
 ## A Script for easy and automated VM's creation :
 
@@ -66,3 +67,7 @@ Examples:
 	./newVM.sh --name vm2 --disk 15G --ram 2G --var 4G --ipv4 192.168.1.42
 
 ```
+
+## Contact :
+
+mailto:gnt-conf@ouvrard.it
