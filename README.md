@@ -3,7 +3,7 @@ Ganeti Cluster configurations for Xen hypervisor on Debian 8.
 
 This configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.04** and can make clone of VM.
 
-All VMs have : 
+## All VMs have : 
 
 * **Own /boot** virtual drive
 * **Own kernel** (doesn't use dom0's kernel)
@@ -11,7 +11,7 @@ All VMs have :
 * **Minimum pkgs** like vim, htop, screen ...
 
 
-Requirements :
+## Requirements :
 
 * Need dom0 with Volum Group "vgganeti"
 * Need **DRBD8** working fine
@@ -21,7 +21,7 @@ Requirements :
 * Folders /srv/ganeti/vminitlog and /srv/ganeti/vmcreation must exist
 
 
-**newVM.sh** is the automated VMs creation's script :
+**newVM.sh**, automated VMs creation's script :
 
 
 ```
