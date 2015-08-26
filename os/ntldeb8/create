@@ -1,0 +1,307 @@
+#!/bin/bash
+
+# Copyright (C) 2007, 2008, 2009, 2012 Google Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+set -e
+
+
+. common.sh
+
+if [ "$GENERATE_CACHE" = "yes" -a ! -d "$CACHE_DIR" ]; then
+  mkdir -p "$CACHE_DIR"
+fi
+
+DPKG_ARCH=${ARCH:-`dpkg --print-architecture`}
+CACHE_FILE="$CACHE_DIR/cache-${SUITE}-${DPKG_ARCH}.tar"
+
+# If the target device is not a real block device we'll first losetup it.
+# This is needed for file disks.
+if [ ! -b $blockdev ]; then
+  ORIGINAL_BLOCKDEV=$blockdev
+  blockdev=$(losetup -sf $blockdev)
+  CLEANUP+=("losetup -d $blockdev")
+fi
+
+
+if [ "$PARTITION_STYLE" = "none" ]; then
+  filesystem_dev=$blockdev
+elif [ "$PARTITION_STYLE" = "msdos" ]; then
+  # Create one big partition, and make it bootable
+  format_disk0 $blockdev
+  filesystem_dev=$(map_disk0 $blockdev)
+ # echo fs-devfinal: $filesystem_dev >> /root/log
+  CLEANUP+=("unmap_disk0 $blockdev")
+else
+  echo "Unknown partition style $PARTITION_STYLE" 1>&2
+  exit 1
+fi
+
+
+mke2fs -Fjqt $OSP_FILESYSTEM $filesystem_dev
+root_uuid=$($VOL_ID $filesystem_dev )
+
+if [ -n "$swapdev" ]; then
+  mkswap $swapdev
+  swap_uuid=$($VOL_ID $swapdev || true )
+fi
+
+
+########### Let's LVM !
+
+
+if [ -f /srv/ganeti/vmcreation/$instance.conf ]
+        then :
+        else echo "Le fichier de configuration de la VM (/srv/ganeti/vmcreation/$instance.conf) n'existe pas..."
+fi
+
+disk_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "disk;" |cut -d ';' -f2`
+root_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "root;" |cut -d ';' -f2`
+boot_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "boot;" |cut -d ';' -f2`
+swap_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "swap;" |cut -d ';' -f2`
+tmp_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "tmp;" |cut -d ';' -f2`
+usr_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "usr;" |cut -d ';' -f2`
+var_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "var;" |cut -d ';' -f2`
+vlog_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "vlog;" |cut -d ';' -f2`
+ipv4=`cat /srv/ganeti/vmcreation/$instance.conf |grep "ipv4;" |cut -d ';' -f2`
+gw=`cat /srv/ganeti/vmcreation/$instance.conf |grep "gw;" |cut -d ';' -f2`
+netmask=`cat /srv/ganeti/vmcreation/$instance.conf |grep "netmask;" |cut -d ';' -f2`
+ipv6=`cat /srv/ganeti/vmcreation/$instance.conf |grep "ipv6;" |cut -d ';' -f2`
+vlan=`cat /srv/ganeti/vmcreation/$instance.conf |grep "vlan;" |cut -d ';' -f2`
+clone_from=`cat /srv/ganeti/vmcreation/$instance.conf |grep "clonefrom;" |cut -d ';' -f2`
+
+
+
+
+image=$clone_from
+
+instance=$INSTANCE_NAME
+
+#CLEANUP+=("gnt-instance deactivate-disks $image")
+#CLEANUP+=("echo deactivate...")
+
+TMPDIR=`mktemp -d`
+CLEANUP+=("rmdir $TMPDIR")
+
+mkdir $TMPDIR/racine $TMPDIR/imgracine
+CLEANUP+=("rmdir $TMPDIR/racine $TMPDIR/imgracine")
+
+########### Am I the Master ?
+
+master=`cat /usr/share/ganeti/master`
+mynode=`hostname`
+
+if [ "$master" == "$mynode" ]
+then 
+	activateOutput=$(gnt-instance activate-disks $image)
+else
+
+	activateOutput=$(ssh $master gnt-instance activate-disks $image)
+fi
+
+imgdisks=$(echo "$activateOutput"|awk -F':' '{ print $3 }')
+imglvdisk=$(echo "$imgdisks"|head -n 1)
+imgbootdisk=$(echo "$imgdisks"|tail -n 1)
+
+kpartx -a $imglvdisk
+CLEANUP+=("kpartx -d $imglvdisk")
+vgscan
+
+vgchange -ay vg$image
+CLEANUP+=("vgchange -an vg$image")
+
+mount /dev/vg$image/racine $TMPDIR/imgracine
+CLEANUP+=("umount $TMPDIR/imgracine")
+mount $imgbootdisk $TMPDIR/imgracine/boot
+CLEANUP+=("umount $TMPDIR/imgracine/boot")
+mount /dev/vg$image/usr $TMPDIR/imgracine/usr
+CLEANUP+=("umount $TMPDIR/imgracine/usr")
+mount /dev/vg$image/var $TMPDIR/imgracine/var
+CLEANUP+=("umount $TMPDIR/imgracine/var")
+mount /dev/vg$image/varlog $TMPDIR/imgracine/var/log
+CLEANUP+=("umount $TMPDIR/imgracine/var/log")
+
+
+vgscan
+echo fs-dev = $filesystem_dev 
+pvcreate $filesystem_dev
+vgcreate vg$instance $filesystem_dev
+CLEANUP+=("vgchange -an vg$instance")
+
+vgdisplay vg$instance
+
+lvcreate -L $root_size -n racine /dev/vg$instance
+lvcreate -L $swap_size -n swap /dev/vg$instance
+lvcreate -L $usr_size -n usr /dev/vg$instance
+lvcreate -L $var_size -n var /dev/vg$instance
+lvcreate -L $vlog_size -n varlog /dev/vg$instance
+lvcreate -L $tmp_size -n tmp /dev/vg$instance
+
+mkswap -f /dev/vg$instance/swap
+mkfs.ext4 /dev/vg$instance/racine
+mkfs.ext4 /dev/vg$instance/usr
+mkfs.ext4 /dev/vg$instance/tmp
+mkfs.ext4 /dev/vg$instance/var
+mkfs.ext4 /dev/vg$instance/varlog
+
+# /boot
+
+mkfs.ext4 $DISK_1_PATH
+#boot_uuid=$($VOL_ID $DISK_1_PATH)
+
+mount /dev/vg$instance/racine $TMPDIR/racine
+CLEANUP+=("umount $TMPDIR/racine")
+
+mkdir $TMPDIR/racine/usr
+mount /dev/vg$instance/usr $TMPDIR/racine/usr
+CLEANUP+=("umount $TMPDIR/racine/usr")
+
+mkdir $TMPDIR/racine/tmp
+mount /dev/vg$instance/tmp $TMPDIR/racine/tmp
+CLEANUP+=("umount $TMPDIR/racine/tmp")
+
+mkdir $TMPDIR/racine/var
+mount /dev/vg$instance/var $TMPDIR/racine/var
+CLEANUP+=("umount $TMPDIR/racine/var")
+
+mkdir $TMPDIR/racine/var/log
+mount /dev/vg$instance/varlog $TMPDIR/racine/var/log
+CLEANUP+=("umount $TMPDIR/racine/var/log")
+
+# For /boot work with his own kernel
+mkdir $TMPDIR/racine/dev
+#sudo mount --bind /dev $TMPDIR/racine/dev
+#CLEANUP+=("umount $TMPDIR/racine/dev")
+
+mkdir $TMPDIR/racine/sys
+#sudo mount --bind /sys $TMPDIR/racine/sys
+#CLEANUP+=("umount $TMPDIR/racine/sys")
+
+mkdir $TMPDIR/racine/proc
+##sudo mount --bind /proc $TMPDIR/racine/proc
+#sshfs root@a3:/proc $TMPDIR/racine/proc
+#CLEANUP+=("umount $TMPDIR/racine/proc")
+
+mkdir $TMPDIR/racine/boot
+mount $DISK_1_PATH $TMPDIR/racine/boot
+CLEANUP+=("umount $TMPDIR/racine/boot")
+
+# Lets COPY
+rsync -av --numeric-ids $TMPDIR/imgracine/ $TMPDIR/racine/
+
+
+# Let’s initialize files
+
+#chroot $TMPDIR/racine update-grub
+echo "Configuring $INSTANCE_NAME ..."
+
+echo "$INSTANCE_NAME" > $TMPDIR/racine/etc/hostname
+echo "$INSTANCE_NAME" > $TMPDIR/racine/etc/mailname
+
+sed -i -e "s/vg$image/vg$INSTANCE_NAME/g" $TMPDIR/racine/etc/fstab
+sed -i -e "s/^#\/dev/\/dev/g" $TMPDIR/racine/etc/fstab
+sed -i -e "s/vg$image/vg$INSTANCE_NAME/g" $TMPDIR/racine/boot/grub/grub.cfg
+
+
+chroot $TMPDIR/racine cp /etc/rc.local /etc/rc.local.back
+
+cat > $TMPDIR/racine/usr/local/bin/firstboot.sh <<EOF
+#!/bin/bash
+
+update-grub
+
+mv /etc/rc.local.back /etc/rc.local
+
+EOF
+
+chroot $TMPDIR/racine chmod 770 /usr/local/bin/firstboot.sh
+
+cat > $TMPDIR/racine/etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+/usr/local/bin/firstboot.sh
+exit 0
+EOF
+
+
+echo "Configuring $INSTANCE_NAME networking scripts ..."
+
+netint="$TMPDIR/racine/etc/network/interfaces"
+
+
+if [ -z $gw ] && [ ! -z $ipv4 ]
+        then gw="$ipv4"
+fi
+
+if [ -z $ipv4 ]
+        then
+echo 'auto lo
+iface lo inet loopback' > $TMPDIR/racine/etc/network/interfaces
+fi
+
+if [ ! -z $ipv4 ] && [ -z $vlan ]
+        then
+echo "auto lo eth0
+iface lo inet loopback
+iface eth0 inet static  
+        address $ipv4
+        netmask $netmask
+        gateway $gw" > $TMPDIR/racine/etc/network/interfaces
+fi
+
+if [ ! -z $ipv4 ] && [ ! -z $vlan ]
+        then
+echo "auto lo eth0
+iface lo inet loopback
+iface eth0 inet manual  
+auto vlan$vlan
+iface vlan$vlan inet static
+        vlan_raw_device eth0
+        address $ipv4
+        netmask $netmask
+        gateway $gw" > $TMPDIR/racine/etc/network/interfaces
+fi
+
+
+
+
+if [ ! -z $ipv6 ] && [ ! -z $vlan ]
+        then
+echo "iface vlan$vlan inet6 static
+        adress $ipv6
+        netmask 64
+        up   ip -6 route add 2404:e400:a::/48 via 2404:e400:a:$vlan::1
+        down ip -6 route del 2404:e400:a::/48 via 2404:e400:a:$vlan::1" >> $TMPDIR/racine/etc/network/interfaces
+fi
+
+
+
+cleanup
+trap - EXIT
+
+exit 0
+                        

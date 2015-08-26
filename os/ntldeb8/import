@@ -1,0 +1,10 @@
+
+#!/bin/bash
+
+#if test -n "$EXP_SIZE_FD"; then
+#  blockdev --getsize64 $EXPORT_DEVICE >&$EXP_SIZE_FD
+#fi
+
+dd of=$IMPORT_DEVICE
+
+

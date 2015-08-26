@@ -1,0 +1,443 @@
+#!/bin/bash
+
+# Copyright (C) 2007, 2008, 2009, 2012 Google Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+set -e
+
+# minimum device size is 256 MB, but we use 255 to account for
+# potential rounding
+
+#declare -ri MIN_DEV_SIZE=$((255*1048576))
+
+. common.sh
+
+instance=$INSTANCE_NAME
+
+## Vérification du fichier de conf VM.
+
+
+if [ -f /srv/ganeti/vmcreation/$instance.conf ]
+	then :
+	else echo "Le fichier de configuration de la VM (/srv/ganeti/vmcreation/$instance.conf) n'existe pas..."
+fi
+
+disk_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "disk;" |cut -d ';' -f2`
+root_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "root;" |cut -d ';' -f2`
+boot_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "boot;" |cut -d ';' -f2`
+swap_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "swap;" |cut -d ';' -f2`
+tmp_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "tmp;" |cut -d ';' -f2`
+usr_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "usr;" |cut -d ';' -f2`
+var_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "var;" |cut -d ';' -f2`
+vlog_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "vlog;" |cut -d ';' -f2`
+ipv4=`cat /srv/ganeti/vmcreation/$instance.conf |grep "ipv4;" |cut -d ';' -f2`
+gw=`cat /srv/ganeti/vmcreation/$instance.conf |grep "gw;" |cut -d ';' -f2`
+netmask=`cat /srv/ganeti/vmcreation/$instance.conf |grep "netmask;" |cut -d ';' -f2`
+ipv6=`cat /srv/ganeti/vmcreation/$instance.conf |grep "ipv6;" |cut -d ';' -f2`
+vlan=`cat /srv/ganeti/vmcreation/$instance.conf |grep "vlan;" |cut -d ';' -f2`
+
+
+
+if [ "$GENERATE_CACHE" = "yes" -a ! -d "$CACHE_DIR" ]; then
+  mkdir -p "$CACHE_DIR"
+fi
+
+DPKG_ARCH=${ARCH:-`dpkg --print-architecture`}
+CACHE_FILE="$CACHE_DIR/cache-${SUITE}-${DPKG_ARCH}.tar"
+
+# If the target device is not a real block device we'll first losetup it.
+# This is needed for file disks.
+if [ ! -b $blockdev ]; then
+  ORIGINAL_BLOCKDEV=$blockdev
+  blockdev=$(losetup -sf $blockdev)
+  CLEANUP+=("losetup -d $blockdev")
+fi
+
+DEVICE_SIZE=$(blockdev --getsize64 $blockdev)
+
+#if [ "$DEVICE_SIZE" -lt $MIN_DEV_SIZE ]; then
+#  echo "Device size is too small ($((DEVICE_SIZE/1048576)) MB)" 1>&2
+#  echo "Required size is at least 256MB" 1>&2
+#  exit 1
+#fi
+
+if [ "$PARTITION_STYLE" = "none" ]; then
+  filesystem_dev=$blockdev
+elif [ "$PARTITION_STYLE" = "msdos" ]; then
+  # Create one big partition, and make it bootable
+  format_disk0 $blockdev
+  filesystem_dev=$(map_disk0 $blockdev)
+  CLEANUP+=("unmap_disk0 $blockdev")
+else
+  echo "Unknown partition style $PARTITION_STYLE" 1>&2
+  exit 1
+fi
+
+
+mke2fs -Fjqt $OSP_FILESYSTEM $filesystem_dev
+root_uuid=$($VOL_ID $filesystem_dev )
+
+if [ -n "$swapdev" ]; then
+  mkswap $swapdev
+  swap_uuid=$($VOL_ID $swapdev || true )
+fi
+
+########### Let's LVM !
+
+TMPDIR=`mktemp -d`
+CLEANUP+=("rmdir $TMPDIR")
+
+mkdir $TMPDIR/racine
+CLEANUP+=("rmdir $TMPDIR/racine")
+
+vgscan
+
+pvcreate $filesystem_dev
+vgcreate vg$instance $filesystem_dev
+CLEANUP+=("vgchange -an vg$instance")
+
+vgdisplay vg$instance
+
+lvcreate -L $root_size -n racine /dev/vg$instance                                                                                       
+lvcreate -L $swap_size -n swap /dev/vg$instance
+lvcreate -L $usr_size -n usr /dev/vg$instance
+lvcreate -L $var_size -n var /dev/vg$instance
+lvcreate -L $vlog_size -n varlog /dev/vg$instance
+lvcreate -L $tmp_size -n tmp /dev/vg$instance
+
+mkswap -f /dev/vg$instance/swap
+mkfs.ext4 /dev/vg$instance/racine
+mkfs.ext4 /dev/vg$instance/usr
+mkfs.ext4 /dev/vg$instance/tmp
+mkfs.ext4 /dev/vg$instance/var
+mkfs.ext4 /dev/vg$instance/varlog
+
+
+usr_uuid=$($VOL_ID /dev/vg$instance/usr )
+#echo $usr_uuid > /root/useruuid
+
+
+
+# /boot
+
+mkfs.ext4 $DISK_1_PATH
+boot_uuid=$($VOL_ID $DISK_1_PATH)
+
+mount /dev/vg$instance/racine $TMPDIR/racine
+CLEANUP+=("umount $TMPDIR/racine")
+
+mkdir $TMPDIR/racine/usr
+mount /dev/vg$instance/usr $TMPDIR/racine/usr
+CLEANUP+=("umount $TMPDIR/racine/usr")
+
+mkdir $TMPDIR/racine/tmp
+mount /dev/vg$instance/tmp $TMPDIR/racine/tmp
+CLEANUP+=("umount $TMPDIR/racine/tmp")
+
+mkdir $TMPDIR/racine/var
+mount /dev/vg$instance/var $TMPDIR/racine/var
+CLEANUP+=("umount $TMPDIR/racine/var")
+
+mkdir $TMPDIR/racine/var/log
+mount /dev/vg$instance/varlog $TMPDIR/racine/var/log
+CLEANUP+=("umount $TMPDIR/racine/var/log")
+
+# For /boot work with his own kernel
+mkdir $TMPDIR/racine/dev
+#mount --bind /dev $TMPDIR/racine/dev
+#sshfs root@a3:/dev $TMPDIR/racine/dev
+#CLEANUP+=("umount $TMPDIR/racine/dev")
+
+mkdir $TMPDIR/racine/sys
+#mount --bind /sys $TMPDIR/racine/sys
+#sshfs root@a3:/sys $TMPDIR/racine/sys
+#CLEANUP+=("umount $TMPDIR/racine/sys")
+
+mkdir $TMPDIR/racine/proc
+#mount --bind /proc $TMPDIR/racine/proc
+#sshfs root@a3:/proc $TMPDIR/racine/proc
+#ls -al $TMPDIR/racine/proc
+#CLEANUP+=("umount $TMPDIR/racine/proc")
+
+mkdir $TMPDIR/racine/boot
+mount $DISK_1_PATH $TMPDIR/racine/boot
+mkdir $TMPDIR/racine/boot/grub
+CLEANUP+=("umount $TMPDIR/racine/boot")
+
+
+# remove the cache file if it's old (> 2 weeks) and writable by the owner (the
+# default due to the standard umask)
+if [ "$CLEAN_CACHE" -a -d "$CACHE_DIR" ]; then
+  find "$CACHE_DIR" -name 'cache-*.tar' -type f \
+    -daystart -mtime "+${CLEAN_CACHE}" -print0 | \
+    xargs -r0 rm -f
+fi
+
+if [ -f "$CACHE_FILE" ]; then
+  tar xf "$CACHE_FILE" -C $TMPDIR
+else
+  if [ "$PROXY" ]; then
+    export http_proxy="$PROXY"
+    export https_proxy="$PROXY"
+  fi
+  # INCLUDE will be empty if EXTRA_PKGS is null/empty, otherwise we
+  # build the full parameter format from it
+
+  INCLUDE=${EXTRA_PKGS:+"--include=$EXTRA_PKGS"}
+
+## Packages :
+
+
+  COMP=${COMPONENTS:+"--components=$COMPONENTS"}
+
+  #debootstrap \
+  #  --arch "$DPKG_ARCH" \
+  #  --include=$EXTRA_PKGS \
+  #  $COMP \
+  #  "$SUITE" $TMPDIR $MIRROR
+
+   debootstrap --arch amd64 --include=$EXTRA_PKGS $COMP $SUITE $TMPDIR/racine 
+   
+
+  # remove the downloaded debs, as they are no longer needed
+  find "$TMPDIR/racine/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
+    xargs -r0 rm -f
+
+  # remove the persistent-net rules, otherwise it will remember the node's
+  # interfaces as eth0, eth1, ...
+  rm -f "$TMPDIR/racine/etc/udev/rules.d/z25_persistent-net.rules"
+
+  if [ "$GENERATE_CACHE" = "yes" ]; then
+    TMP_CACHE=`mktemp "${CACHE_FILE}.XXXXXX"`
+    tar cf "$TMP_CACHE" -C $TMPDIR .
+    mv -f "$TMP_CACHE" "$CACHE_FILE"
+  fi
+fi
+
+# reset the root password
+chroot $TMPDIR/racine passwd -d root
+#chroot $TMPDIR/racine update-initramfs -u
+#chroot $TMPDIR/racine update-grub2
+
+# Let's Logging
+echo `date` > /root/log
+echo extrapkg: $EXTRA_PKGS >> /root/log
+echo comp: $COMP >> /root/log
+echo suite: $SUITE >> /root/log
+echo tmpdir: $TMPDIR >> /root/log
+echo mirror: $MIRROR >> /root/log
+echo blockdev: $blockdev >> /root/log
+echo blockdev1: $blockdev1 >> /root/log
+echo instance: $instance >> /root/log
+echo osp-fs: $OSP_FILESYSTEM >> /root/log
+echo fs-devfinal: $filesystem_dev >> /root/log
+echo tmp_cache: $TMP_CACHE >> /root/log
+echo cache_file: $CACHE_FILE >> /root/log
+echo vol_id: $VOL_ID >> /root/log
+echo root_uuid: $root_uuid >> /root/log
+echo swap_dev: $swap_dev >> /root/log
+echo partition-style: $PARTITION_STYLE >> /root/log
+
+cp -p /etc/hosts $TMPDIR/racine/etc/hosts
+cp -p /etc/resolv.conf $TMPDIR/racine/etc/resolv.conf
+echo $instance > $TMPDIR/racine/etc/hostname
+echo $instance > $TMPDIR/racine/etc/mailname
+
+if [ "$SUITE" == "trusty" ]
+	then boot_args=",nobootwait"
+fi
+
+cat > $TMPDIR/racine/etc/fstab <<EOF
+# /etc/fstab: static file system information.
+#
+# <file system>   <mount point>   <type>  <options>       <dump>  <pass>
+/dev/xvdb	/boot	ext4	defaults	0	2
+/dev/vg$instance/racine	/		$OSP_FILESYSTEM    defaults        0       2
+/dev/vg$instance/usr	/usr		$OSP_FILESYSTEM    defaults$boot_args        0       2
+/dev/vg$instance/tmp	/tmp		$OSP_FILESYSTEM    defaults$boot_args        0       2
+/dev/vg$instance/var	/var		$OSP_FILESYSTEM    defaults$boot_args        0       2
+/dev/vg$instance/varlog	/var/log	$OSP_FILESYSTEM    defaults$boot_args        0       2
+/dev/vg$instance/swap   swap		swap		defaults$boot_args        0       0
+proc              /proc           proc    defaults        0       0
+EOF
+
+
+cat > $TMPDIR/racine/usr/local/bin/firstboot.sh <<EOF
+
+#!/bin/bash
+
+update-grub
+
+
+echo '
+
+#!/bin/sh
+case "$1" in
+ start)
+    /sbin/vgscan
+    /sbin/vgchange -ay
+    ;;
+  stop)
+    /sbin/vgchange -an
+    ;;
+  restart|force-reload)
+    ;;
+esac
+
+exit 0
+
+' > /etc/init.d/lvm
+
+chmod 0755 /etc/init.d/lvm
+update-rc.d lvm start 26 S . stop 82 1 .	
+
+
+echo '#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+exit 0' > /etc/rc.local
+
+EOF
+
+chroot $TMPDIR/racine chmod 770 /usr/local/bin/firstboot.sh
+
+cat > $TMPDIR/racine/etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+vgchange -ay
+sleep 2
+/usr/local/bin/firstboot.sh
+exit 0
+EOF
+
+if [ -z $gw ] && [ ! -z $ipv4 ]
+	then gw="$ipv4"
+fi
+
+if [ -z $ipv4 ]
+        then
+echo 'auto lo
+iface lo inet loopback' > $TMPDIR/racine/etc/network/interfaces
+fi
+
+if [ ! -z $ipv4 ] && [ -z $vlan ]
+	then 
+echo "auto lo eth0
+iface lo inet loopback
+iface eth0 inet static	
+        address $ipv4
+        netmask $netmask
+        gateway $gw" > $TMPDIR/racine/etc/network/interfaces
+fi
+
+if [ ! -z $ipv4 ] && [ ! -z $vlan ]
+	then
+echo "auto lo eth0
+iface lo inet loopback
+iface eth0 inet manual	
+auto vlan$vlan
+iface vlan$vlan inet static
+        vlan_raw_device eth0
+        address $ipv4
+        netmask $netmask
+        gateway $gw" > $TMPDIR/racine/etc/network/interfaces
+fi
+
+if [ ! -z $ipv6 ] && [ ! -z $vlan ]
+	then
+echo "iface vlan$vlan inet6 static
+        adress $ipv6
+        netmask 64
+        up   ip -6 route add 2404:e400:a::/48 via 2404:e400:a:$vlan::1
+        down ip -6 route del 2404:e400:a::/48 via 2404:e400:a:$vlan::1" >> $TMPDIR/racine/etc/network/interfaces
+fi
+
+
+# for kvm, we should only activate a serial console if the
+# 'serial_console' parameter is set; for xen-pvm though, we should
+# always define a serial console
+SERIAL_PORT=""
+if [ "$HYPERVISOR" = "xen-pvm" ]; then
+  SERIAL_PORT="hvc0"
+fi
+
+if [ -n "$SERIAL_PORT" ]; then
+  if [ -e $TMPDIR/racine/etc/inittab ]; then
+    # debian
+    echo "T0:23:respawn:/sbin/getty $SERIAL_PORT 38400" >> $TMPDIR/racine/etc/inittab
+  elif [ -e $TMPDIR/racine/etc/init ]; then
+    # ubuntu (eg. karmic)
+    cat > $TMPDIR/racine/etc/init/${SERIAL_PORT}.conf <<EOF
+start on stopped rc RUNLEVEL=[2345]
+stop on runlevel [!2345]
+
+respawn
+exec /sbin/getty -8 38400 $SERIAL_PORT
+EOF
+  elif [ -e $TMPDIR/racine/etc/event.d ]; then
+    # ubuntu (eg. intrepid)
+    cat > $TMPDIR/racine/etc/event.d/${SERIAL_PORT}.conf <<EOF
+start on stopped rc2
+start on stopped rc3
+start on stopped rc4
+start on stopped rc5
+
+stop on runlevel 0
+stop on runlevel 1
+stop on runlevel 6
+
+respawn
+exec /sbin/getty 38400 ${SERIAL_PORT}
+EOF
+  fi
+fi
+
+RUN_PARTS=`which run-parts`
+
+if [ -n "$RUN_PARTS" -a -n "$CUSTOMIZE_DIR" -a -d "$CUSTOMIZE_DIR" ]; then
+  TARGET=$TMPDIR/racine
+  BLOCKDEV=$blockdev
+  FSYSDEV=$filesystem_dev
+  export TARGET SUITE ARCH PARTITION_STYLE EXTRA_PKGS BLOCKDEV FSYSDEV
+  $RUN_PARTS $CUSTOMIZE_DIR
+fi
+
+# execute cleanups
+cleanup
+trap - EXIT
+
+exit 0

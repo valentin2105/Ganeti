@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#TODO: Faire quelques vérifications
+
+exit 0 # Succès
+
