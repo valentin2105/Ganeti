@@ -14,9 +14,8 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 
 ## Requirements :
 
-* Debian 8 with Xen 4.4 
+* Debian 8 with Xen 4.4, Ganeti v2.12.4, DRBD 8.4.0 
 * Need dom0 with Volume Group **"vgganeti"**
-* **DRBD8** installed & working fine
 * Requires at least **2 nodes**
 * **"os"** folder is for /usr/share/ganeti/os/
 * **"instance-debootstrap"** is for /etc/ganeti-instance-debootstrap
