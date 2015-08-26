@@ -69,4 +69,4 @@ Examples:
 
 ## Contact :
 
-mailto:gnt-conf@ouvrard.it
+gnt-conf@ouvrard.it
