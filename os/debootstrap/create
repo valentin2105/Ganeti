@@ -382,8 +382,8 @@ if [ ! -z $ipv6 ] && [ ! -z $vlan ]
 echo "iface vlan$vlan inet6 static
         adress $ipv6
         netmask 64
-        up   ip -6 route add 2404:e400:a::/48 via 2404:e400:a:$vlan::1
-        down ip -6 route del 2404:e400:a::/48 via 2404:e400:a:$vlan::1" >> $TMPDIR/racine/etc/network/interfaces
+        up   ip -6 route add ::1
+        down ip -6 route del ::1" >> $TMPDIR/racine/etc/network/interfaces
 fi
 
 
