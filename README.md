@@ -1,5 +1,4 @@
 # Ganeti-Configuration
-Ganeti Cluster configurations for Xen 4.4 hypervisor on Debian 8.
 
 This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.04** with debootstrap via an automated script and can make clone of VMs.
 
