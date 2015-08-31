@@ -1264,9 +1264,9 @@ then
 	gnt-instance add -t $DISK_METHOD --disk 0:size=$DISK --disk 1:size=$BOOT -B memory=$RAM,vcpus=$VCPU -o $METHOD+$OS -n $NODES --no-ip-check --no-name-check --no-start $VM_NAME ; echo $? |tee -a $LOG_FILE
 	echo
 	# Vérification de bonne création de la VM :
-	is_ntldeb_error=`cat /srv/ganeti/vminitlog/$VM_NAME.log |grep Failure: `
-	is_ntldeb_error_code=`echo $?`
-	if [ "$is_ntldeb_error_code" == "1" ]
+	is_clone_error=`cat /srv/ganeti/vminitlog/$VM_NAME.log |grep Failure: `
+	is_clone_error_code=`echo $?`
+	if [ "$is_clone_error_code" == "1" ]
 		then 
 			tput bold; echo "Modification du root_path ..."  ; tput sgr0 
 			echo  
