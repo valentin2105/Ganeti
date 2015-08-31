@@ -1,6 +1,6 @@
-# How-To install this Cluster Configuration ?
+# HOW-TO install this Ganeti's cluster configuration ?
 
-You need at least of **two Debian Jessie** server with clean install.                                                                                                         
+You need at least of **two Debian Jessie** servers with clean install.                                                                                                         
 
 ## 1 - Xen Installation
 
@@ -66,9 +66,6 @@ ln -s initrd.img-3.16* initrd-3-xenU
 ```
 
 
-
-
-
 ### DRBD :
 
 ```
@@ -103,4 +100,4 @@ gnt-cluster init --vg-name=vgganeti --master-netdev=xenbr0 cluster.domain.you
 gnt-node add mynewnode.node
 gnt-node list
 
-
+Don't forget to deploy your configuration (or clone this repo) on all your nodes !
