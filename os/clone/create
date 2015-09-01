@@ -66,7 +66,7 @@ fi
 
 if [ -f /srv/ganeti/vmcreation/$instance.conf ]
         then :
-        else echo "Le fichier de configuration de la VM (/srv/ganeti/vmcreation/$instance.conf) n'existe pas..."
+        else echo "The file (/srv/ganeti/vmcreation/$instance.conf) don't exist..."
 fi
 
 disk_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "disk;" |cut -d ';' -f2`
@@ -85,14 +85,9 @@ vlan=`cat /srv/ganeti/vmcreation/$instance.conf |grep "vlan;" |cut -d ';' -f2`
 clone_from=`cat /srv/ganeti/vmcreation/$instance.conf |grep "clonefrom;" |cut -d ';' -f2`
 
 
-
-
 image=$clone_from
 
 instance=$INSTANCE_NAME
-
-#CLEANUP+=("gnt-instance deactivate-disks $image")
-#CLEANUP+=("echo deactivate...")
 
 TMPDIR=`mktemp -d`
 CLEANUP+=("rmdir $TMPDIR")
@@ -101,7 +96,6 @@ mkdir $TMPDIR/racine $TMPDIR/imgracine
 CLEANUP+=("rmdir $TMPDIR/racine $TMPDIR/imgracine")
 
 ########### Am I the Master ?
-
 master=`cat /usr/share/ganeti/master`
 mynode=`hostname`
 
@@ -119,6 +113,7 @@ imgbootdisk=$(echo "$imgdisks"|tail -n 1)
 
 kpartx -a $imglvdisk
 CLEANUP+=("kpartx -d $imglvdisk")
+
 vgscan
 
 vgchange -ay vg$image
@@ -135,13 +130,14 @@ CLEANUP+=("umount $TMPDIR/imgracine/var")
 mount /dev/vg$image/varlog $TMPDIR/imgracine/var/log
 CLEANUP+=("umount $TMPDIR/imgracine/var/log")
 
-
 vgscan
+
 echo fs-dev = $filesystem_dev 
 pvcreate $filesystem_dev
 vgcreate vg$instance $filesystem_dev
 CLEANUP+=("vgchange -an vg$instance")
 
+#Let's create LVM
 vgdisplay vg$instance
 
 lvcreate -L $root_size -n racine /dev/vg$instance
@@ -161,7 +157,6 @@ mkfs.ext4 /dev/vg$instance/varlog
 # /boot
 
 mkfs.ext4 $DISK_1_PATH
-#boot_uuid=$($VOL_ID $DISK_1_PATH)
 
 mount /dev/vg$instance/racine $TMPDIR/racine
 CLEANUP+=("umount $TMPDIR/racine")
@@ -184,17 +179,10 @@ CLEANUP+=("umount $TMPDIR/racine/var/log")
 
 # For /boot work with his own kernel
 mkdir $TMPDIR/racine/dev
-#sudo mount --bind /dev $TMPDIR/racine/dev
-#CLEANUP+=("umount $TMPDIR/racine/dev")
 
 mkdir $TMPDIR/racine/sys
-#sudo mount --bind /sys $TMPDIR/racine/sys
-#CLEANUP+=("umount $TMPDIR/racine/sys")
 
 mkdir $TMPDIR/racine/proc
-##sudo mount --bind /proc $TMPDIR/racine/proc
-#sshfs root@a3:/proc $TMPDIR/racine/proc
-#CLEANUP+=("umount $TMPDIR/racine/proc")
 
 mkdir $TMPDIR/racine/boot
 mount $DISK_1_PATH $TMPDIR/racine/boot
@@ -206,7 +194,6 @@ rsync -av --numeric-ids $TMPDIR/imgracine/ $TMPDIR/racine/
 
 # Let’s initialize files
 
-#chroot $TMPDIR/racine update-grub
 echo "Configuring $INSTANCE_NAME ..."
 
 echo "$INSTANCE_NAME" > $TMPDIR/racine/etc/hostname
@@ -215,7 +202,6 @@ echo "$INSTANCE_NAME" > $TMPDIR/racine/etc/mailname
 sed -i -e "s/vg$image/vg$INSTANCE_NAME/g" $TMPDIR/racine/etc/fstab
 sed -i -e "s/^#\/dev/\/dev/g" $TMPDIR/racine/etc/fstab
 sed -i -e "s/vg$image/vg$INSTANCE_NAME/g" $TMPDIR/racine/boot/grub/grub.cfg
-
 
 chroot $TMPDIR/racine cp /etc/rc.local /etc/rc.local.back
 
@@ -287,8 +273,6 @@ iface vlan$vlan inet static
 fi
 
 
-
-
 if [ ! -z $ipv6 ] && [ ! -z $vlan ]
         then
 echo "iface vlan$vlan inet6 static
@@ -297,8 +281,6 @@ echo "iface vlan$vlan inet6 static
         up   ip -6 route add ::1
         down ip -6 route del ::1" >> $TMPDIR/racine/etc/network/interfaces
 fi
-
-
 
 cleanup
 trap - EXIT

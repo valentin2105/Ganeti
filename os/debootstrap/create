@@ -33,7 +33,7 @@ instance=$INSTANCE_NAME
 
 if [ -f /srv/ganeti/vmcreation/$instance.conf ]
 	then :
-	else echo "Le fichier de configuration de la VM (/srv/ganeti/vmcreation/$instance.conf) n'existe pas..."
+	else echo "The file (/srv/ganeti/vmcreation/$instance.conf) don't exist..."
 fi
 
 disk_size=`cat /srv/ganeti/vmcreation/$instance.conf |grep "disk;" |cut -d ';' -f2`
@@ -128,9 +128,6 @@ mkfs.ext4 /dev/vg$instance/varlog
 
 
 usr_uuid=$($VOL_ID /dev/vg$instance/usr )
-#echo $usr_uuid > /root/useruuid
-
-
 
 # /boot
 
@@ -156,22 +153,9 @@ mkdir $TMPDIR/racine/var/log
 mount /dev/vg$instance/varlog $TMPDIR/racine/var/log
 CLEANUP+=("umount $TMPDIR/racine/var/log")
 
-# For /boot work with his own kernel
 mkdir $TMPDIR/racine/dev
-#mount --bind /dev $TMPDIR/racine/dev
-#sshfs root@a3:/dev $TMPDIR/racine/dev
-#CLEANUP+=("umount $TMPDIR/racine/dev")
-
 mkdir $TMPDIR/racine/sys
-#mount --bind /sys $TMPDIR/racine/sys
-#sshfs root@a3:/sys $TMPDIR/racine/sys
-#CLEANUP+=("umount $TMPDIR/racine/sys")
-
 mkdir $TMPDIR/racine/proc
-#mount --bind /proc $TMPDIR/racine/proc
-#sshfs root@a3:/proc $TMPDIR/racine/proc
-#ls -al $TMPDIR/racine/proc
-#CLEANUP+=("umount $TMPDIR/racine/proc")
 
 mkdir $TMPDIR/racine/boot
 mount $DISK_1_PATH $TMPDIR/racine/boot
@@ -200,15 +184,7 @@ else
   INCLUDE=${EXTRA_PKGS:+"--include=$EXTRA_PKGS"}
 
 ## Packages :
-
-
   COMP=${COMPONENTS:+"--components=$COMPONENTS"}
-
-  #debootstrap \
-  #  --arch "$DPKG_ARCH" \
-  #  --include=$EXTRA_PKGS \
-  #  $COMP \
-  #  "$SUITE" $TMPDIR $MIRROR
 
    debootstrap --arch amd64 --include=$EXTRA_PKGS $COMP $SUITE $TMPDIR/racine 
    
