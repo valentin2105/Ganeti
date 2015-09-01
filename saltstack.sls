@@ -1,3 +1,19 @@
+xen-linux-system:
+  pkg:
+    - latest
+
+xen-tools:
+  pkg:
+    - latest
+
+ganeti-instance-debootstrap:
+  pkg:
+    - latest
+
+ganeti2:
+  pkg:
+    - latest
+
 /usr/local/bin/newVM:
   file.managed:
     - source: salt://ganeti/newVM.sh
@@ -24,6 +40,7 @@
     - source: salt://ganeti/os
     - user: root
     - group: root
+    - file_mode: '0755'
     - makedirs: true
 
 /etc/ganeti/instance-debootstrap:
