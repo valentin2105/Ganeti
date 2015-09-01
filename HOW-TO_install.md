@@ -63,6 +63,7 @@ ln -s initrd.img-3.16* initrd-3-xenU
 "initrd_path":"/boot/initrd-3-xenU",
 "kernel_args":"ro",
 "kernel_path":"/boot/vmlinuz-3-xenU",
+"min disk-size":"150",
 ```
 
 
