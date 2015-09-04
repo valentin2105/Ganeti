@@ -66,6 +66,8 @@ ln -s initrd.img-3.16* initrd-3-xenU
 "min disk-size":"150",
 "master_netdev":"xenbr0",
 "link":"xenbr0",
+"volume_group_name":"vgganeti",
+"metavg":"vgganeti",
 ```
 
 
