@@ -18,8 +18,6 @@ drbd8-utils:
   pkg:
     - latest
 
-
-
 /usr/local/bin/newVM:
   file.managed:
     - source: salt://ganeti/newVM.sh
@@ -55,5 +53,4 @@ drbd8-utils:
     - user: root
     - group: root
     - makedirs: true
-
 
