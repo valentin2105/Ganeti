@@ -107,6 +107,10 @@ gnt-node list
 
 Don't forget to deploy your configuration (or clone this repo) on all your nodes !
 
-For helping about deployement, I have made a Saltstack's recipe who deploy Ganeti configuration on nodes/minions.
+## 5 - Deploy configuration using Saltstack
+
+For helping about deployement, 
+I have made a Saltstack's state who deploy Ganeti configuration on nodes/minions.
 You can found this state here : https://github.com/valentin2105/Ganeti/blob/master/saltstack.sls
+Don't forget to move it to **init.sls**
 
