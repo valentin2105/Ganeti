@@ -104,6 +104,7 @@ gnt-cluster init --vg-name=vgganeti --master-netdev=xenbr0 cluster.domain.you
 ```
 gnt-node add mynewnode.node
 gnt-node list
+```
 
 Don't forget to deploy your configuration (or clone this repo) on all your nodes !
 
