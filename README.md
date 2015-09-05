@@ -2,6 +2,8 @@
 
 This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.04** with debootstrap via an automated script and can make clone of VMs.
 
+<a href=https://github.com/valentin2105/Ganeti/blob/master/HOW-TO_install.md>How-to-install ?</a>
+
 ## VMs have : 
 
 * **Own /boot** virtual drive
