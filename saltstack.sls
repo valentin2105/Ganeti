@@ -41,7 +41,7 @@ drbd8-utils:
 
 /usr/share/ganeti/os:
   file.recurse:
-    - source: salt://ganeti/os
+    - source: salt://ganeti/latest/os
     - user: root
     - group: root
     - file_mode: '0755'
@@ -49,8 +49,40 @@ drbd8-utils:
 
 /etc/ganeti/instance-debootstrap:
   file.recurse:
-    - source: salt://ganeti/instance-debootstrap
+    - source: salt://ganeti/latest/instance-debootstrap
     - user: root
     - group: root
     - makedirs: true
+
+/boot/initrd-3-xenU:
+  file.symlink:
+    - target: /boot/initrd.img-3.16.0-4-amd64
+
+/boot/vmlinuz-3-xenU:
+  file.symlink:
+    - target: /boot/vmlinuz-3.16.0-4-amd64
+
+grub-pc:
+  pkg:
+    - installed
+    - require:
+      - pkg: xen-linux-system
+
+dpkg-divert --divert /etc/grub.d/08_linux_xen --rename /etc/grub.d/20_linux_xen:
+  cmd:
+    - wait
+    - watch:
+      - pkg: grub-pc
+
+update-grub:
+  cmd:
+    - wait
+    - watch:
+      - cmd: dpkg-divert --divert /etc/grub.d/08_linux_xen --rename /etc/grub.d/20_linux_xen
+
+#https://github.com/valentin2105/Ganeti.git:
+#  git.latest:
+#    - rev: master
+#    - target: /srv/salt/ganeti/latest
+
 
