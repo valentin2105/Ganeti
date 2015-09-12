@@ -77,4 +77,4 @@ Examples:
 
 ## Contact :
 
-gnt-conf@ouvrard.it
+Ganeti-Github@ouvrard.it
