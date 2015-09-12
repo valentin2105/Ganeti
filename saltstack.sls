@@ -20,7 +20,7 @@ drbd8-utils:
 
 /usr/local/bin/newVM:
   file.managed:
-    - source: salt://ganeti/newVM.sh
+    - source: salt://ganeti/latest/newVM.sh
     - user: root
     - group: root
     - mode: 774
