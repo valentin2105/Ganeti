@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Ecrit par Valentin OUVRARD, 2015
+# Writted by Valentin OUVRARD, 2015
 
-# This script create or clone VMs on Debian 8 or Ubuntu 14.04.
+# 
+# This script create or clone VMs on Debian 8 or Ubuntu 14.04 using Ganeti, Xen and DRBD.
 
 
 ###############################################################
@@ -63,7 +64,7 @@ Help () {
 	echo
 }
 
-## Min - Max variables  #### MODIFIABLE !
+## Min - Max variables  #### Can be modified !!!
 MIN_RAM_SIZE=1
 MAX_RAM_SIZE=30
 
@@ -121,22 +122,22 @@ cdr2mask ()
 function trap_ctrlc ()
 {
 
-    	echo "  Vous avez taper CTRL+C,"
+    	echo "  you catch CTRL+C,"
     	tput bold; tput setaf 4;
- 		read -r -p "Voulez-vous vraiment quitter ? [o/N] " response
+ 		read -r -p "Are you really want to leave ? [o/N] " response
  		tput sgr0
 		case $response in
     		[oO][eE][sS]|[oO]) 
 				echo
      		  	tput bold ; tput setaf 1
-     		   	echo "Vous avez quitté.." ; tput sgr0; echo ; exit 1
+     		   	echo "You leave.." ; tput sgr0; echo ; exit 1
         		;;
     		*)  echo
     	    	;;
 		esac
 }
 
-## Catchons les arguments !
+## Catch argz !
 while [ "$1" != "" ]; do
 	case $1 in
 # obligatoires
@@ -220,14 +221,14 @@ while [ "$1" != "" ]; do
 	shift
 done
 ###############################################################
-## Vérification des arguments !								 ##
+## Checks argz !								 ##
 ###############################################################
 
 ## VM NAME
 if [ -z $VM_NAME ]
 	then
 		echo
-		echo "Vous n'avez pas précisé la nom de la VM (--name)"
+		echo "You don't give the VM's name (--name)"
 		exit 1
 fi
 
@@ -236,7 +237,7 @@ VM_NAME=`echo "${VM_NAME,,}"`
 if [ "$VM_NAME" == "$CLONE_FROM" ]
 	then 
 		echo
-		echo "Vous ne pouvez pas cloner une VM avec le même nom !"
+		echo "You can't make a clone with the same name !"
 		exit 1
 fi
 
@@ -251,7 +252,7 @@ fi
 if [ -z $DISK ]
 	then
 		echo
-		echo "Vous n'avez pas précisé la taille du Disque (--disk)"
+		echo "You don't give the Disk size (--disk)"
 		exit 1
 fi
 try_disk=`echo "${DISK: -1}"`
@@ -259,7 +260,7 @@ if [ "$try_disk" == "G" ] || [ "$try_disk" == "g" ]
 	then :
 	else
 		echo
-		echo "Vous n'avez pas rentré une taille de disque en Giga (G|g)"
+		echo "You don't give Disk's size in gigabytes (G|g)"
 		exit 1
 fi
 DISK_SIZE=`echo $DISK | sed 's/[g|G]//' `
@@ -267,19 +268,19 @@ re='^[0-9]+$'
 if ! [[ $DISK_SIZE =~ $re ]]
 	then
 		echo
-		echo "Vous n'avez pas rentré un nombre pour la taille du disque"
+		echo "You don't give a number for the disk size"
 		exit 1
 fi
 if [ "$DISK_SIZE" -gt $MAX_DISK_SIZE ]
 	then
 		echo
-		echo "Vous avez spécifié une taille de disque trop élevée ! (limite "$MAX_DISK_SIZE"G)"
+		echo "You give a too high disk's size ! (limit "$MAX_DISK_SIZE"G)"
 		exit 1
 fi
 if [ "$DISK_SIZE" -lt $MIN_DISK_SIZE ]
 	then
 		echo
-		echo "Vous avez spécifié une taille de disque trop petite ! (limite "$MIN_DISK_SIZE"G)"
+		echo "You give a too small disk's size ! (limit "$MIN_DISK_SIZE"G)"
 		exit 1
 fi
 
@@ -287,7 +288,7 @@ fi
 if [ -z $RAM ]
 	then
 		echo
-		echo "Vous n'avez pas précisé la taille de la RAM (--ram)"
+		echo "You don't give the RAM's size ! (--ram)"
 		exit 1
 	fi
 try_gram=`echo "${RAM: -1}"`
@@ -295,7 +296,7 @@ if [ "$try_gram" == "G" ] || [ "$try_gram" == "g" ]
 	then :
 	else
 		echo
-		echo "Vous n'avez pas rentré une taille de RAM en Giga (G|g)"
+		echo "You don't give the RAM's size in gigabytes ! (G|g)"
 		exit 1
 fi
 
@@ -304,19 +305,19 @@ re='^[0-9]+$'
 if ! [[ $RAM_SIZE =~ $re ]]
 	then
 		echo
-		echo "Vous n'avez pas rentré un nombre pour la RAM"
+		echo "You don't give a number for the RAM's size ! "
 		exit 1
 fi
 if [ "$RAM_SIZE" -gt $MAX_RAM_SIZE ]
 	then
 		echo
-		echo "Vous avez spécifié un nombre de RAM trop élevé ! (limite "$MAX_RAM_SIZE"G)"
+		echo "You give a too high RAM's size !(limit "$MAX_RAM_SIZE"G)"
 		exit 1
 fi
 if [ "$RAM_SIZE" -lt $MIN_RAM_SIZE ]
 	then
 		echo
-		echo "Vous avez spécifié un nombre de RAM trop petit ! (limite "$MIN_RAM_SIZE"G)"
+		echo "You give a too small RAM's size ! (limit "$MIN_RAM_SIZE"G)"
 		exit 1
 fi
 ###############################################################
@@ -327,13 +328,13 @@ if [ -z $VCPU ]
 		if [ $VCPU -gt $MAX_VCPU ]
 			then 
 				echo
-				echo "Vous avez spécifié un nombre de VCPU trop élevé ! (limite "$MAX_VCPU")"
+				echo "You give too much vCPU ! (limit "$MAX_VCPU")"
 				exit 1
 		fi
 		if [ $VCPU -lt $MIN_VCPU ]
 			then 
 				echo
-				echo "Vous avez spécifié un nombre de VCPU trop petit ! (limite "$MIN_VCPU")"
+				echo "You give not enought vCPU ! (limit "$MIN_VCPU")"
 				exit 1
 		fi
 fi
@@ -347,7 +348,7 @@ if [ -z $IPV4 ]
 		if [ $verif_ipv4 -eq 1 ]
 			then
 				echo
-				echo "Il ne s'agit pas d'une adresse IPV4 valable"
+				echo "It's not a good IPV4 Address !"
 				exit 1
 
 		fi
@@ -359,21 +360,21 @@ fi
 if [ -z $IPV4 ] && [ ! -z $GW ] 
 	then 
 				echo
-				echo "Si vous précisez une Gateway, il faut précisez une ipv4."
+				echo "If you give a Gateway, you have to give an IPV4 !"
 				exit 1		
 fi
 
 if [ -z $IPV4 ] && [ ! -z $NETMASK ] 
 	then 
 				echo
-				echo "Si vous précisez un Netmask, il faut précisez une ipv4."
+				echo "If you give a Netmask, you have to give an IPV4 !"
 				exit 1		
 fi
 
 if [ -z $IPV4 ] && [ ! -z $DEFAULT_VLAN ] 
 	then 
 				echo
-				echo "Si vous précisez un Vlan, il faut précisez une ipv4 et/ou ipv6."
+				echo "If you give a VLAN, you have to give an IPV4 or IPV6 !"
 				exit 1		
 fi
 
@@ -386,7 +387,7 @@ if [ -z $GW ]
 		if [ $verif_gw -eq 1 ]
 			then
 				echo
-				echo "Il ne s'agit pas d'une adresse de Gateway (--gw) valable"
+				echo "It's not a good Gateway ! (--gw)"
 				exit 1
 
 		fi
@@ -399,7 +400,7 @@ if [ -z $NETMASK ]
 		if [ "${NETMASK::1}" != "/" ]
 			then 				
 				echo
-				echo "Il ne s'agit pas d'un Netmask en CIDR (ex : /24)"
+				echo "It's not an CIDR Netmask ! (like /24)"
 				exit 1
 		fi
 		NETMASK_CIDR=`echo $NETMASK	|cut -d '/' -f2`
@@ -407,13 +408,13 @@ if [ -z $NETMASK ]
 			then :
 			else
 				echo
-				echo "Il ne s'agit pas d'un Netmask en CIDR (ex : /24)"
+				echo "It's not an CIDR Netmask ! (like /24)"
 				exit 1
 		fi
 		if [ $NETMASK_CIDR -gt 32 ]
 			then 
 				echo
-				echo "Il ne s'agit pas d'un Netmask en CIDR (ex : /24)"
+				echo "It's not an CIDR Netmask ! (like /24)"
 				exit 1				
 			else :
 
@@ -431,14 +432,14 @@ if [ ! -z $DEFAULT_VLAN ]
 			then :	
 			else
 		    echo
-			echo "Il ne s'agit pas d'un numéro de VLAN valable ! (il faut saisir un nombre)"
+			echo "You give a bad VLAN number (not a number) !"
 			exit 1
 		fi
 		vlan_length=`echo ${#DEFAULT_VLAN}`
 		if [ $vlan_length -gt 3 ]
 			then
 			echo
-			echo "Il ne s'agit pas d'un numéro de VLAN valable ! max = 999"
+			echo "The max VLAN number is 999 !"
 			exit 1
 		fi
 		:
@@ -453,7 +454,7 @@ if [ -z $ROOT ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille pour / en Giga (G|g)"
+				echo "You don't give the /'s size in gigabytes ! (G|g)"
 				exit 1
 		fi
 		ROOT_SIZE=`echo $ROOT | sed 's/[g|G]//' `
@@ -461,20 +462,20 @@ if [ -z $ROOT ]
 		if ! [[ $ROOT_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de /"
+				echo "You don't give an number for /'s size !"
 				exit 1
 		fi
 
 		if [ "$ROOT_SIZE" -gt $MAX_ROOT_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour / trop élevée ! (limite "$MAX_ROOT_SIZE"G)"
+				echo "The /'s size is too big ! (limit "$MAX_ROOT_SIZE"G)"
 				exit 1
 		fi
 		if [ "$ROOT_SIZE" -lt $MIN_ROOT_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour / trop petite ! (limite "$MIN_ROOT_SIZE"G)"
+				echo "The /'s size is too small ! (limit "$MIN_ROOT_SIZE"G)"
 				exit 1
 		fi
 fi
@@ -488,7 +489,7 @@ if [ -z $BOOT ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille pour /boot en Méga (m|M)"
+				echo "You don't give the /boot's size in megabytes ! (M|m)"
 				exit 1
 		fi
 		BOOT_SIZE=`echo $BOOT | sed 's/[m|M]//' `
@@ -496,19 +497,19 @@ if [ -z $BOOT ]
 		if ! [[ $BOOT_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de /boot"
+				echo "You don't give an number for /boot's size !"
 				exit 1
 		fi
 		if [ "$BOOT_SIZE" -gt $MAX_BOOT_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /boot trop élevée ! (limite "$MAX_BOOT_SIZE"M)"
+				echo "The /boot's size is too big !  (limit "$MAX_BOOT_SIZE"M)"
 				exit 1
 		fi
 		if [ "$BOOT_SIZE" -lt $MIN_BOOT_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /boot trop petite ! (limite "$MIN_BOOT_SIZE"M)"
+				echo "The /boot's size is too small !  (limit "$MIN_BOOT_SIZE"M)"
 				exit 1
 		fi
 fi
@@ -522,7 +523,7 @@ if [ -z $USR ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille pour /usr en Giga (g|G)"
+				echo "You don't give the /usr's size in gigabytes ! (g|G)"
 				exit 1
 		fi
 		USR_SIZE=`echo $USR | sed 's/[g|G]//' `
@@ -530,24 +531,24 @@ if [ -z $USR ]
 		if ! [[ $USR_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de /usr"
+				echo "You don't give an number for /usr's size !"
 				exit 1
 		fi
 		if [ "$USR_SIZE" -gt $MAX_USR_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /usr trop élevée ! (limite "$MAX_USR_SIZE"G)"
+				echo "The /usr's size is too big ! (limit "$MAX_USR_SIZE"G)"
 				exit 1
 		fi
 		if [ "$USR_SIZE" -lt $MIN_USR_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /usr trop petite ! (limite "$MIN_USR_SIZE"G)"
+				echo "The /usr's size is too small ! (limit "$MIN_USR_SIZE"G)"
 				exit 1
 		fi
 fi
 
-## Var
+## var
 if [ -z $VAR ]
 	then :
 	else
@@ -556,7 +557,7 @@ if [ -z $VAR ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille pour /var en Giga (g|G)"
+				echo "You don't give the /var's size in gigabytes ! (g|G)"
 				exit 1
 		fi
 		VAR_SIZE=`echo $VAR | sed 's/[g|G]//' `
@@ -564,19 +565,19 @@ if [ -z $VAR ]
 		if ! [[ $VAR_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de /var"
+				echo "You don't give an number for /var's size !"
 				exit 1
 		fi
 		if [ "$VAR_SIZE" -gt $MAX_VAR_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /var trop élevée ! (limite "$MAX_VAR_SIZE"G)"
+				echo "The /var's size is too big ! (limit "$MAX_VAR_SIZE"G)"
 				exit 1
 		fi
 		if [ "$VAR_SIZE" -lt $MIN_VAR_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /var trop petite ! (limite "$MIN_VAR_SIZE"G)"
+				echo "The /var's size is too small ! (limit "$MIN_VAR_SIZE"G)"
 				exit 1
 		fi
 fi
@@ -590,7 +591,7 @@ if [ -z $VLOG ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille pour /var/log en Giga (g|G)"
+				echo "You don't give the /var/log's size in gigabytes ! (g|G)"
 				exit 1
 		fi
 		VLOG_SIZE=`echo $VLOG | sed 's/[g|G]//' `
@@ -598,19 +599,19 @@ if [ -z $VLOG ]
 		if ! [[ $VLOG_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de /var/log"
+				echo "You don't give a an number for /var/log's size ! "
 				exit 1
 		fi
 		if [ "$VLOG_SIZE" -gt $MAX_VLOG_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /var/log trop élevée ! (limite "$MAX_VLOG_SIZE"G)"
+				echo "The /var/log's size is too big ! (limit "$MAX_VLOG_SIZE"G)"
 				exit 1
 		fi
 		if [ "$VLOG_SIZE" -lt $MIN_VLOG_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /var/log trop petite ! (limite "$MIN_VLOG_SIZE"G)"
+				echo "The /var/log's size is too small ! (limit "$MIN_VLOG_SIZE"G)"
 				exit 1
 		fi
 fi
@@ -624,7 +625,7 @@ if [ -z $TMP ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille pour /tmp en Méga (m|M)"
+				echo "You don't give the /tmp's size in megabytes ! (m|M)"
 				exit 1
 		fi
 		TMP_SIZE=`echo $TMP | sed 's/[m|M]//' `
@@ -632,19 +633,19 @@ if [ -z $TMP ]
 		if ! [[ $TMP_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de /tmp"
+				echo "You don't give a number for /tmp's size ! "
 				exit 1
 		fi
 		if [ "$TMP_SIZE" -gt $MAX_TMP_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /tmp trop élevée ! (limite "$MAX_TMP_SIZE"M)"
+				echo "The /tmp's size is too big ! (limit "$MAX_TMP_SIZE"M)"
 				exit 1
 		fi
 		if [ "$TMP_SIZE" -lt $MIN_TMP_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille pour /tmp trop petite ! (limite "$MIN_TMP_SIZE"M)"
+				echo "The /tmp's size is too small ! (limit "$MIN_TMP_SIZE"M)"
 				exit 1
 		fi
 fi
@@ -658,7 +659,7 @@ if [ -z $SWAP ]
 			then :
 			else
 				echo
-				echo "Vous n'avez pas rentré une taille de Swap en Giga (g|G)"
+				echo "You don't give the Swap's size in gigabytes ! (g|G)"
 				exit 1
 		fi
 		SWAP_SIZE=`echo $SWAP | sed 's/[g|G]//' `
@@ -666,19 +667,19 @@ if [ -z $SWAP ]
 		if ! [[ $SWAP_SIZE =~ $re ]]
 			then
 				echo
-				echo "Vous n'avez pas rentré un nombre pour la taille de Swap"
+				echo "You don't give a number for Swap's size ! "
 				exit 1
 		fi
 		if [ "$SWAP_SIZE" -gt $MAX_SWAP_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille de Swap trop élevée ! (limite "$MAX_SWAP_SIZE"G)"
+				echo "The Swap's size is too big ! (limit "$MAX_SWAP_SIZE"G)"
 				exit 1
 		fi
 		if [ "$SWAP_SIZE" -lt $MIN_SWAP_SIZE ]
 			then
 				echo
-				echo "Vous avez spécifié une taille de Swap trop petite ! (limite "$MIN_SWAP_SIZE"G)"
+				echo "The Swap's size is too small ! (limit "$MIN_SWAP_SIZE"G)"
 				exit 1
 		fi
 fi
@@ -703,14 +704,14 @@ if [ -z $NODES ]
     		then :
     		else 
     			echo
-    			echo "Vous avez mal saisi les nodes (hostname1:hostname2)"
+    			echo "The nodes' names go wrong ! (hostname1:hostname2)"
     			exit 1
     	fi 
     	NODE1=`echo $NODES |cut -d ':' -f1`
     	NODE2=`echo $NODES |cut -d ':' -f2`
     	if [ -z "$NODE1" ] || [ -z "$NODE2" ]
     		then	echo
-    				echo "Vous avez mal saisi les nodes (hostname1:hostname2)"
+    				echo "The nodes' names go wrong ! (hostname1:hostname2)"
     				exit 1
     	fi
 fi
@@ -753,17 +754,17 @@ if [ -z $SWAP ]
 fi
 
 
-## Vérification de taille entre les partitions.
+## Let's check disks sizes.
 
 
 num=$(( $ROOT_SIZE + $SWAP_SIZE + $USR_SIZE + $VAR_SIZE + $VLOG_SIZE + 1 ))
-# Le +1 correspond à /tmp qui ne peut excéder 1go)
+# The +1 is for tmp who isn't bigger than 1g)
 
 
 if [ $num -gt $DISK_SIZE ]
 	then 
 	echo
-	echo "La taille de vos partitions est supérieur à la taille du disque." 
+	echo "All your partitions are bigger than your disk size !" 
 	exit 1
 fi
 
@@ -774,7 +775,7 @@ elif  [ "$OS" == "trusty" ]
 	then os_clean="Ubuntu"
 else
 	echo
-	echo "L'OS spécifié est incorrect (\"jessie\" pour Debian et \"trusty\" pour Ubuntu)"
+	echo "The OS given is wrong, (\"jessie\" for Debian and \"trusty\" for Ubuntu)"
 	exit 1
 fi
 
@@ -791,7 +792,7 @@ echo
 echo "---------------------------------------------------------"
 tput bold
 tput setaf 2
-echo "Vous allez créer une VM nommée `tput setaf 4`\"$VM_NAME\""
+echo "You're going to create `tput setaf 4`\"$VM_NAME\""
 tput sgr0
 echo "---------------------------------------------------------"
 echo "--- `tput bold`Memory`tput sgr0`   = $RAM"
@@ -886,7 +887,7 @@ if [ "$CONFIRM" = "False" ]
 	then : 
 	else
 		tput bold; tput setaf 4;
-		read -r -p "Lancement de la création ? [o/N] " response
+		read -r -p "Launch the creation ? [o/N] " response
 		tput sgr0
 		case $response in
     		[oO][eE][sS]|[oO]) 
@@ -895,25 +896,25 @@ if [ "$CONFIRM" = "False" ]
     		*)
 				echo
      		  	tput bold ; tput setaf 1
-     		   	echo "Annulation.." ; tput sgr0; echo ; exit 1
+     		   	echo "Exit.." ; tput sgr0; echo ; exit 1
     	    	;;
 		esac
 fi	
 tput bold ; tput setaf 2
-echo "Création.." ; tput sgr0; echo
+echo "Creation.." ; tput sgr0; echo
 
 # Cela permet de catcher CTRL+C
 trap "trap_ctrlc" 2
 
 ###############################################################
-## Génération du fichier de configuration de la VM  	     ##
+## Let's generate VM's config file 	     ##
 ###############################################################
 
 if [ -d /srv/ganeti/ ]
 	then :
     else 
     	echo
-    	echo "Le dossier /srv/ganeti n'existe pas!"
+    	echo "The folder /srv/ganeti don't exist !"
     	exit 1
 fi
 
@@ -950,22 +951,19 @@ EOF
 LOG_FILE=/srv/ganeti/vminitlog/$VM_NAME.log
 
 
-###############################################################
-## Lancement des commandes Ganeti							 ##
-###############################################################
 
 
-# Sleep correspond au temps que la VM boot pour faire un update-grub !
+# The sleep time is for the first VM boot (for update-grub) !
 SLEEP=40
 
 ###############################################################
-## Vérification propre à la configuration de Ganeti :        ##
+##  Check Ganeti configuration      ##
 ###############################################################
 
 ## Config du Cluster :
 if [ ! -f /var/lib/ganeti/config.data ]
 	then 	echo
-			echo "Ganeti ne semble pas installé..."
+			echo "Is Ganeti installed ? ..."
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -977,7 +975,7 @@ lvm_conf=`cat /etc/lvm/lvm.conf |grep drbd`
 lvm_code=`echo $?`
 if [ "$lvm_code" == "1" ]
 	then 	echo
-			echo "Le LVM du Master semble mal configuré (filter drbd) !"
+			echo "The LVM configuration is not good ! (filter drbd)"
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -988,7 +986,7 @@ vg_conf=`vgscan |grep $VG_MASTER`
 vg_code=`echo $?`
 if [ "$vg_code" == "1" ]
 	then 	echo
-			echo "Le VG $VG_MASTER ne semble pas exister !"
+			echo "The VG $VG_MASTER don't exist !"
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -998,7 +996,7 @@ fi
 ## Fichier de conf (deboostrap / clone/ variants ...)
 if [ ! -f /usr/share/ganeti/os/debootstrap/create ]
 	then 	echo
-			echo "La configuration de Ganeti (debootstrap) semble incorrecte..."
+			echo "Deboostrap's configuration go wrong !..."
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1006,7 +1004,7 @@ if [ ! -f /usr/share/ganeti/os/debootstrap/create ]
 fi
 if [ ! -f /etc/ganeti/instance-debootstrap/variants/jessie.conf ]
 	then 	echo
-			echo "La configuration de Debootstrap pour Jessie semble incorrecte..."
+			echo "The Jessie variant for debootstrap don't exist !..."
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1014,7 +1012,7 @@ if [ ! -f /etc/ganeti/instance-debootstrap/variants/jessie.conf ]
 fi
 if [ ! -f /etc/ganeti/instance-debootstrap/variants/trusty.conf ]
 	then 	echo
-			echo "La configuration de Debootstrap pour Trusty semble incorrecte..."
+			echo "The Trusty variant for debootstrap don't exist !..."
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1022,14 +1020,14 @@ if [ ! -f /etc/ganeti/instance-debootstrap/variants/trusty.conf ]
 fi
 if [ ! -f /usr/share/ganeti/os/clone/create ]
 	then 	echo
-			echo "La configuration de Ganeti (clone) semble incorrecte..."
+			echo "The Clone configuration go wrong !..."
 			echo
 			tput bold ; tput setaf 1
 		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 
-## On vérifie la compatibilité des nodes 
+## Let's check nodes configuration
 if [ "$DISK_METHOD" == "plain" ]
 	then 
 		verif_node1=`gnt-node info $NODE1 |grep "master_capable: True"`
@@ -1037,10 +1035,10 @@ if [ "$DISK_METHOD" == "plain" ]
 		if [ "$verif_node1_code" == "0" ]
 			then :
 			else 	echo
-    				echo "Le node $NODE1 semble incapable de recevoir la VM $VM_NAME"
+    				echo "$NODE1 can't receive the VM $VM_NAME"
     				echo
 					tput bold ; tput setaf 1
-		   			echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   			echo "Exit.." ; tput sgr0; echo ; exit 1
     				exit 1
     	fi
     else
@@ -1049,7 +1047,7 @@ if [ "$DISK_METHOD" == "plain" ]
 		if [ "$verif_node1_code" == "0" ]
 			then :
 			else 	echo
-    				echo "Le node $NODE1 semble incapable de recevoir la VM $VM_NAME"
+    				echo "$NODE1 can't receive the VM $VM_NAME"
     				echo
 					tput bold ; tput setaf 1
 		   			echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1060,7 +1058,7 @@ if [ "$DISK_METHOD" == "plain" ]
 		if [ "$verif_node2_code" == "0" ]
 			then :
 			else 	echo
-    				echo "Le node $NODE2 semble incapable de recevoir la VM $VM_NAME"
+    				echo "$NODE2 can't receive the VM $VM_NAME"
     				echo
 					tput bold ; tput setaf 1
 		   			echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1073,43 +1071,43 @@ fi
 
 if [ "$METHOD" == "debootstrap" ]
 then
-	tput bold; echo "Copie du fichier de conf ..." ; tput sgr0 
+	tput bold; echo "Let's copy the configuration's file ..." ; tput sgr0 
 	echo
 	echo "/srv/ganeti/vmcreation/$VM_NAME.conf"
 	gnt-cluster copyfile /srv/ganeti/vmcreation/$VM_NAME.conf |tee $LOG_FILE
 	echo
-	tput bold; echo "Création de la VM ..." ; tput sgr0
+	tput bold; echo "Let's create the VM ..." ; tput sgr0
 	echo
 	gnt-instance add -t $DISK_METHOD --disk 0:size=$DISK --disk 1:size=$BOOT -B memory=$RAM,vcpus=$VCPU -o $METHOD+$OS -n $NODES --no-ip-check --no-name-check --no-start $VM_NAME |tee -a $LOG_FILE
 	echo
 
-	## Vérification de la bonne création de la VM, sinon on quitte !
+	## Install work ? exit if not
 	is_deboot_error=`cat /srv/ganeti/vminitlog/$VM_NAME.log |grep Failure: `
 	is_deboot_error_code=`echo $?`
 	if [ "$is_deboot_error_code" == "1" ]
 	then
-		tput bold; echo "Modification du root_path ..."  ; tput sgr0 
+		tput bold; echo "Setting up the root_path ..."  ; tput sgr0 
 		echo  
 		gnt-instance modify --hypervisor-parameters=root_path=/dev/vg$VM_NAME/racine $VM_NAME |tee -a $LOG_FILE
 		echo
-		tput bold; echo "Mis à jours de Grub ..."  ; tput sgr0 
+		tput bold; echo "Let's Update-grub ..."  ; tput sgr0 
 		echo 
 		gnt-instance start $VM_NAME |tee -a $LOG_FILE
 		echo
 		sleep $SLEEP
-		tput bold; echo "Modification du kernel_path ..." ; tput sgr0
+		tput bold; echo "Setting up the kernel_path ..." ; tput sgr0
 		echo
 		gnt-instance modify --hypervisor-parameters=kernel_path=/usr/lib/grub-xen/grub-x86_64-xen.bin $VM_NAME |tee -a $LOG_FILE
 		echo
-		tput bold; echo "Reboot de la VM ..."  ; tput sgr0
+		tput bold; echo "Let's reboot the VM ..."  ; tput sgr0
 		echo
 		gnt-instance reboot $VM_NAME |tee -a $LOG_FILE
 	else
 		echo	
 		tput bold ; tput setaf 1 
-		echo "La VM $VM_NAME semble avoir un problème de création !" |tee -a $LOG_FILE
+		echo "The $VM_NAME creation look go wrong... !" |tee -a $LOG_FILE
 		tput sgr0
-		echo "Le fichier de log est $LOG_FILE"
+		echo "Log file is $LOG_FILE"
 		echo
 	fi
 else :
@@ -1122,7 +1120,7 @@ fi
 if [ "$METHOD" == "clone" ]
 then	
 
-	tput bold; echo "Vérification de la VM à cloner ..." ; tput sgr0 
+	tput bold; echo "Let's check the Clone source ..." ; tput sgr0 
 	echo
 
 	## Vérification clonage sur la même nodes :
@@ -1132,14 +1130,14 @@ then
 	if [ "$CLONE_FROM_NODE" != "$NODES_FIRST" ]
 		then
 			echo
-			echo "La VM à cloner n'est pas sur le même node ($CLONE_FROM_NODE) !"
+			echo "The VM to clone is not on the same node ! ($CLONE_FROM_NODE) !"
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 	fi
  
-	## Comparaison de la taille des disque entre les vm :
+	## Let's check VM's disks :
 	if [ "$CONFIRM" == "False" ]
 		then :
 		else
@@ -1147,10 +1145,10 @@ then
 			if [ $CLONE_FROM_DISK -gt $DISK_SIZE ]
 				then 
 					echo
-					echo "Le disque de la VM à cloner est supérieur à la nouvelle VM !"
+					echo "The VM's disks to clone are bigger than the new VM !"
 					echo
 					tput bold ; tput setaf 1
-		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
+		     		echo "Exit.." ; tput sgr0; echo ; exit 1
 					exit 1
 			fi
 
@@ -1164,7 +1162,7 @@ then
 					if [ $root_clone -gt $ROOT_SIZE ]
 					then 
 					echo
-					echo "Le / de la VM à cloner est supérieur au / de la nouvelle VM ("$root_clone"G) !"
+					echo "The /'s LV are bigger than the new VM ! ("$root_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
 		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1173,7 +1171,7 @@ then
 					if [ $swap_clone -gt $SWAP_SIZE ]
 					then 
 					echo
-					echo "Le Swap de la VM à cloner est supérieur au Swap de la nouvelle VM ("$swap_clone"G) !"
+					echo "The Swap's LV are bigger than the new VM ! ("$swap_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
 		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1182,7 +1180,7 @@ then
 					if [ $usr_clone -gt $USR_SIZE ]
 					then 
 					echo
-					echo "Le /usr de la VM à cloner est supérieur au /usr de la nouvelle VM ("$usr_clone"G) !"
+					echo "The /usr's LV are bigger than the new VM ! ("$usr_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
 		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1191,7 +1189,7 @@ then
 					if [ $var_clone -gt $VAR_SIZE ]
 					then 
 					echo
-					echo "Le /var de la VM à cloner est supérieur au /var de la nouvelle VM  ("$var_clone"G)!"
+					echo "The /var's LV are bigger than the new VM !  ("$var_clone"G)!"
 					echo
 					tput bold ; tput setaf 1
 		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
@@ -1200,15 +1198,17 @@ then
 					if [ $vlog_clone -gt $VLOG_SIZE ]
 					then 
 					echo
-					echo "Le /var/log de la VM à cloner est supérieur au /var/log de la nouvelle VM ("$vlog_clone"G) !"
+					echo "The /var/log's LV are bigger than the new VM ! ("$vlog_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
 		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
 					exit 1
 					fi
-			fi
+			fi 
+
+			#### IL FAUDRAIT RAJOUTER LE FAIT QUE LE FICHIER NEXISTE PAS !!!!
 	fi
-	## la VM est elle allumé ?
+	## The vm is on ?
 	clone_watch=`gnt-instance list |grep "$CLONE_FROM" |grep running`
 	clone_status=`echo $?`
 	if [ "$clone_status" == "0" ]
@@ -1219,47 +1219,47 @@ then
 	if [ "$clone_status" == "0" ]
 		then clone_status_verbose="down"
 	fi
-	# Vérification de l'état
+	# Check Vm's state
 	if [ "$clone_status_verbose" == "running" ]
 
-		then echo "La VM que vous voulez cloner est allumée !"
+		then echo "The VM to clone is running !"
 
 			if [ "$CONFIRM" == "False" ]
-			then echo ; tput bold; echo "Extinction de la VM à cloner ..." ; echo ;tput sgr0
+			then echo ; tput bold; echo "Let's stop the VM to clone ..." ; echo ;tput sgr0
 				gnt-instance stop $CLONE_FROM
 				CLONE_REUP=True
 			else
 					tput bold; tput setaf 4;
 					echo
-			 		read -r -p "Voulez-vous éteindre la VM $CLONE_FROM ? [o/N] " response
+			 		read -r -p "You wan't to stop $CLONE_FROM ? [o/N] " response
 			 		tput sgr0
 					case $response in
 	    				[oO][eE][sS]|[oO]) 
 							echo
-							tput bold; echo "Extinction de la VM à cloner ..." ; tput sgr0
+							tput bold; echo "Let's stop the VM to clone ..." ; tput sgr0
 							echo
 							gnt-instance stop $CLONE_FROM
-							echo "La VM à éteindre est correctement éteinte."
+							echo "The VM is correctly stopped."
 	        				;;
 	    				*)
 							echo
 	     		  			tput bold ; tput setaf 1
-	     		   			echo "Annulation.." ; tput sgr0; echo ; exit 1
+	     		   			echo "Exiting.." ; tput sgr0; echo ; exit 1
 	    	    			;;
 					esac
 			fi
 	fi
 	if [ "$clone_status_verbose" == "down" ]
-		then echo "La VM que vous souhaitez cloner est correctement stoppée."
+		then echo "The VM to clone is correctly stopped."
 		     CLONE_REUP=False
 	fi
 	echo
-	tput bold; echo "Copie du fichier de conf ..." ; tput sgr0 
+	tput bold; echo "Let's copy configuration's file ..." ; tput sgr0 
 	echo
 	echo "/srv/ganeti/vmcreation/$VM_NAME.conf"
 	gnt-cluster copyfile /srv/ganeti/vmcreation/$VM_NAME.conf |tee $LOG_FILE
 	echo
-	tput bold; echo "Création de la VM ..." ; tput sgr0
+	tput bold; echo "Let's clone the VM ..." ; tput sgr0
 	echo
 	gnt-instance add -t $DISK_METHOD --disk 0:size=$DISK --disk 1:size=$BOOT -B memory=$RAM,vcpus=$VCPU -o $METHOD+$OS -n $NODES --no-ip-check --no-name-check --no-start $VM_NAME ; echo $? |tee -a $LOG_FILE
 	echo
@@ -1268,28 +1268,28 @@ then
 	is_clone_error_code=`echo $?`
 	if [ "$is_clone_error_code" == "1" ]
 		then 
-			tput bold; echo "Modification du root_path ..."  ; tput sgr0 
+			tput bold; echo "Setting up the root_path ..."  ; tput sgr0 
 			echo  
 			gnt-instance modify --hypervisor-parameters=root_path=/dev/vg$VM_NAME/racine $VM_NAME |tee -a $LOG_FILE
 			echo
-			tput bold; echo "Modification du kernel_path ..." ; tput sgr0
+			tput bold; echo "Setting up the kernel_path ..." ; tput sgr0
 			echo
 			gnt-instance modify --hypervisor-parameters=kernel_path=/usr/lib/grub-xen/grub-x86_64-xen.bin $VM_NAME |tee -a $LOG_FILE
 			echo
-			tput bold; echo "Mis à jours de Grub ..."  ; tput sgr0 
+			tput bold; echo "Let's Update-Grub ..."  ; tput sgr0 
 			echo 
 			gnt-instance start $VM_NAME |tee -a $LOG_FILE
 			echo
 			sleep $SLEEP
-			tput bold; echo "Reboot de la VM ..."  ; tput sgr0
+			tput bold; echo "Let's reboot the VM ..."  ; tput sgr0
 			echo
 			gnt-instance reboot $VM_NAME |tee -a $LOG_FILE
 
-			# Relance de la VM cloné
+			# reboot the cloned vm
 			if [ "$CLONE_REUP" == "True" ]  && [ "$CONFIRM" == "False" ]
 			then 
 				echo
-				tput bold; echo "Allumage de la VM clonée ..." ; tput sgr0
+				tput bold; echo "Let's start the cloned VM ..." ; tput sgr0
 				echo
 				gnt-instance start $CLONE_FROM |tee -a $LOG_FILE
 			else 
@@ -1297,33 +1297,33 @@ then
 				then
 					tput bold; tput setaf 4;
 					echo
-				 	read -r -p "Voulez-vous rallumer la VM $CLONE_FROM ? [o/N] " response
+				 	read -r -p "Do you want restart VM $CLONE_FROM ? [o/N] " response
 				 	tput sgr0
 					case $response in
 			    		[oO][eE][sS]|[oO]) 
 							echo
-							tput bold; echo "Allumage de la VM à cloner ..." ; tput sgr0
+							tput bold; echo "Let's starting the VM..." ; tput sgr0
 							echo
 							gnt-instance start $CLONE_FROM
-							echo "La VM à allumer est correctement allumée."
+							echo "The VM is correctly started."
 							echo
 			        		;;
 			    		*)
 							echo
 			     			tput bold ; tput setaf 1
-			     			echo "La VM $CLONE_FROM reste éteinte.." ; tput sgr0 ; echo 
+			     			echo "The VM $CLONE_FROM stay down.." ; tput sgr0 ; echo 
 			    	    	;;
 					esac
 				else
 					echo
 			     	tput bold ; tput setaf 1
-			     	echo "La VM $CLONE_FROM reste éteinte.. (--no-confirm)" ; tput sgr0 ; echo 
+			     	echo "The VM $CLONE_FROM stay down.. (--no-confirm)" ; tput sgr0 ; echo 
 				fi
 			fi	
 		else
 			echo	
 			tput bold ; tput setaf 1 
-			echo "La VM $VM_NAME semble avoir un problème de création !" |tee -a $LOG_FILE
+			echo "Something look go wrong with the creation !" |tee -a $LOG_FILE
 			tput sgr0
 			echo "Le fichier de log est $LOG_FILE"
 			echo
@@ -1340,7 +1340,7 @@ if  [ "$CONFIRM" == "False" ]
 	then : 
     else
     	tput bold; tput setaf 4;
-    	read -r -p "Voulez-vous ouvrir la console ? [o/N] " response
+    	read -r -p "Do you want open the console ? [o/N] " response
 		tput sgr0
 		case $response in
     		[oO][eE][sS]|[oO]) 
@@ -1363,15 +1363,15 @@ if [ "$VERIF_VM_CREATION" == "1" ]
 	then
 		echo	
 		tput bold ; tput setaf 2 
-		echo "La VM $VM_NAME est correctement créée !" |tee -a $LOG_FILE
+		echo "The VM $VM_NAME is correctly created !" |tee -a $LOG_FILE
 		tput sgr0
 		echo
 	else 
 		echo	
 		tput bold ; tput setaf 1 
-		echo "La VM $VM_NAME semble avoir un problème de création !" |tee -a $LOG_FILE
+		echo "Sorry, the VM $VM_NAME have a problem !" |tee -a $LOG_FILE
 		tput sgr0
-		echo "Le fichier de log est $LOG_FILE"
+		echo "Let's check log's file $LOG_FILE"
 		echo
 fi
 exit 0
