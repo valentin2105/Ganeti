@@ -29,9 +29,12 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 
 ## A Script for easy and automated VM's creation :
 
+**NewVM.sh** v0.1
+
+![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/newVM.jpg)
 
 ```
-NewVM.sh v0.1 - Create a Ganeti Virtual Machine
+NewVM.sh v0.1 - Create or Clone Virtuals Machines
 Author: Valentin OUVRARD
 Usage: newVM.sh --name <NAME> --disk <DISK> --ram <RAM> 
 
