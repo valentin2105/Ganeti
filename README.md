@@ -2,6 +2,8 @@
 
 This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.04** with debootstrap via an automated script and can make clone of VMs.
 
+![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
+
 <a href=https://github.com/valentin2105/Ganeti/blob/master/HOW-TO_install.md>Documentation</a>
 
 <a href=http://blog.ouvrard.it/index.php/2015/09/12/cluster-ganeti-xen-saltstack/>Advanced installation tutorial (in french)</a>
