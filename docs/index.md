@@ -24,7 +24,7 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 
 ## Automated creation and cloning script
 
-NewVM.sh V0.1 - Create or Clone Virtuals Machines
+**NewVM.sh V0.1** - Create or Clone Virtuals Machines
 
 A script for create and clone Virtuals Machines simply !
 
