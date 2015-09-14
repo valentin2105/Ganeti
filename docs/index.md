@@ -1,14 +1,10 @@
-# Ganeti-Configuration
+# Ganeti with Xen and Saltstack
 
 This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.04** with debootstrap via an automated script and can make clone of VMs.
 
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
 
-<a href=https://github.com/valentin2105/Ganeti/blob/master/HOW-TO_install.md>Documentation</a>
-
-<a href=http://blog.ouvrard.it/index.php/2015/09/12/cluster-ganeti-xen-saltstack/>Advanced installation tutorial (in french)</a>
-
-## VMs have : 
+## Virtuals Machines configurations
 
 * **Own /boot** virtual drive
 * **Own kernel** (doesn't use dom0's kernel)
@@ -17,7 +13,7 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 * **Minimum pkgs** like vim, htop, screen ...
 
 
-## Requirements :
+## System requirement
 
 * Debian 8 with Xen 4.4, Ganeti v2.12.4, DRBD 8.4.0 
 * Need dom0 with Volume Group **"vgganeti"**
@@ -27,7 +23,9 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 * Folders **/srv/ganeti/vminitlog** and **/srv/ganeti/vmcreation** must exist
 * Ganeti configured with default "kernel_path" on dom0's kernel & the same for "initrd_path". 
 
-## newVM.sh v0.1
+## Automated VM's Creation and cloning script
+
+NewVM.sh V0.1 - Create or Clone Virtuals Machines
 
 A script for create and clone Virtuals Machines simply !
 
@@ -75,6 +73,7 @@ Examples:
 
 ```
 
-## Contact :
+## Contact
 
 Ganeti-Github@ouvrard.it
+@Valentin_NC
