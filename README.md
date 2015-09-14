@@ -4,6 +4,8 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
 
+![alt tag](https://readthedocs.org/projects/ganeti-xen-and-saltstack/?badge=master) Documentation
+
 ## Virtuals Machines configurations
 
 * **Own /boot** virtual drive
