@@ -23,7 +23,7 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 * Folders **/srv/ganeti/vminitlog** and **/srv/ganeti/vmcreation** must exist
 * Ganeti configured with default "kernel_path" on dom0's kernel & the same for "initrd_path". 
 
-## Automated VM's Creation and cloning script
+## Automated creation and cloning script
 
 NewVM.sh V0.1 - Create or Clone Virtuals Machines
 
