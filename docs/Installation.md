@@ -110,8 +110,24 @@ Don't forget to deploy your configuration (or clone this repo) on all your nodes
 
 ## 5 - Deploy configuration using Saltstack
 
-For helping about deployement, 
-I have made a Saltstack's state who deploy Ganeti configuration on nodes/minions.
-You can found this state here : https://github.com/valentin2105/Ganeti/blob/master/saltstack.sls
-Don't forget to move it to **init.sls**
+For deploy the Ganeti configuration with saltstack, you need clone my Ganeti repo in salt directory :
 
+``` 
+cd /srv/salt/
+git clone https://github.com/valentin2105/Ganeti.git 
+```
+
+After, you need to edit your **top.sls** file for match your Ganeti's nodes, for example :
+
+```
+base:
+  '(node*).domain.io':
+    - match: pcre
+    - ganeti
+```
+
+and let's apply this configuration :
+
+``` 
+salt 'node*' state.highstate
+```
