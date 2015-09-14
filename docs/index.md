@@ -11,10 +11,10 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 ## Virtuals Machines configurations
 
 * **Own /boot** virtual drive
-* **Own kernel** (doesn't use dom0's kernel)
-* **LVM2 configuration** based  
+* **Own kernel** 
+* **LVM configuration** based  
 * **SWAP partition**
-* **Minimum pkgs** like vim, htop, screen ...
+* **Somes pkgs** like vim, htop, screen, git ...
 
 ## System requirement
 
