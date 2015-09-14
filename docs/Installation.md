@@ -1,4 +1,4 @@
-# HOW-TO install this Ganeti configuration ?
+# How-to install this cluster configuration ?
 
 You need at least of **two Debian Jessie** servers with clean install.                                                                                                         
 
