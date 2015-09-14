@@ -4,8 +4,8 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
 
-* `Documentation <http://ganeti-xen-and-saltstack.readthedocs.org/en/master/>`_
-* `Advanced Tutorial (French) <http://blog.ouvrard.it/index.php/2015/09/12/cluster-ganeti-xen-saltstack/>`_
+* **Documentation** <http://ganeti-xen-and-saltstack.readthedocs.org/en/master/>
+* **Advanced Tutorial** (French) <http://blog.ouvrard.it/index.php/2015/09/12/cluster-ganeti-xen-saltstack/>
 
 
 
