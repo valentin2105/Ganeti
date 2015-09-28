@@ -46,4 +46,5 @@ w # Write
 reboot
 pvresize /dev/xvda1
 lvextend -L+<size-in-giga> /dev/vg<vm>/<lv-to-extend>
+resize2fs /dev/vg<vm>/<lv-to-extend>
 ```
