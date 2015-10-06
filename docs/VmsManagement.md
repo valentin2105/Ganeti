@@ -39,7 +39,7 @@ gnt-instance reboot <vm>
 On the VM :
 ```
 fdisk /dev/xvda (in my case)
-l # List and note starting partition number
+p # List and note starting partition number
 d # Delete the partition
 n # New partition with same number and starting number
 w # Write
