@@ -7,7 +7,7 @@ gnt-instance migrate <vm>
 
 * Migrate the secondary disk to another node
 ```
-gnt-instance migrate-disks <newnode> <vm>
+gnt-instance replace-disks -n <newnode> <vm>
 ```
 
 * Cluster's Health verification
