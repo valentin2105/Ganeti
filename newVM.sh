@@ -1098,10 +1098,6 @@ then
 		tput bold; echo "Setting up the kernel_path ..." ; tput sgr0
 		echo
 		gnt-instance modify --hypervisor-parameters=kernel_path=/usr/lib/grub-xen/grub-x86_64-xen.bin $VM_NAME |tee -a $LOG_FILE
-		echo
-		tput bold; echo "Let's reboot the VM ..."  ; tput sgr0
-		echo
-		gnt-instance reboot $VM_NAME |tee -a $LOG_FILE
 	else
 		echo	
 		tput bold ; tput setaf 1 
