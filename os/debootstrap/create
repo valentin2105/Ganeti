@@ -236,6 +236,9 @@ echo $instance > $TMPDIR/racine/etc/mailname
 if [ "$SUITE" == "trusty" ]
 	then boot_args=",nobootwait"
 fi
+if [ "$SUITE" == "xenial" ]
+	then boot_args=",nobootwait"
+fi
 
 cat > $TMPDIR/racine/etc/fstab <<EOF
 # /etc/fstab: static file system information.

@@ -35,7 +35,7 @@ Help () {
 	echo "	--vcpu    <VCPU>		Virtual CPU number"
 	echo "	--nodes   <NODES>		First node and second node(1st:2nd) "
 	echo "	--clone   <CLONE>		Name of a VM to clone"
-	echo "	--variant <OS>			Choose between trusty and jessie (by default)"
+	echo "	--variant <OS>			Choose between trusty, xenial and jessie (by default)"
 	echo "	--no-confirm			Disable VM creation's confirmation"
 	echo
 	echo "Networking options:"
@@ -770,12 +770,14 @@ fi
 
 ## Ecriture OS propre 
 if [ "$OS" == "jessie" ]
-	then os_clean="Debian"
+	then os_clean="Debian 8.5"
 elif  [ "$OS" == "trusty" ]
-	then os_clean="Ubuntu"
+	then os_clean="Ubuntu 14.04"
+elif  [ "$OS" == "xenial" ]
+	then os_clean="Ubuntu 16.04"
 else
 	echo
-	echo "The OS given is wrong, (\"jessie\" for Debian and \"trusty\" for Ubuntu)"
+	echo "The OS given is wrong, (\"jessie\" for Debian and \"trusty\" or  \"xenial\"  for Ubuntu)"
 	exit 1
 fi
 
@@ -966,7 +968,7 @@ if [ ! -f /var/lib/ganeti/config.data ]
 			echo "Is Ganeti installed ? ..."
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 
@@ -978,7 +980,7 @@ if [ "$lvm_code" == "1" ]
 			echo "The LVM configuration is not good ! (filter drbd)"
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 
@@ -989,7 +991,7 @@ if [ "$vg_code" == "1" ]
 			echo "The VG $VG_MASTER don't exist !"
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 
@@ -999,7 +1001,7 @@ if [ ! -f /usr/share/ganeti/os/debootstrap/create ]
 			echo "Deboostrap's configuration go wrong !..."
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 if [ ! -f /etc/ganeti/instance-debootstrap/variants/jessie.conf ]
@@ -1007,7 +1009,7 @@ if [ ! -f /etc/ganeti/instance-debootstrap/variants/jessie.conf ]
 			echo "The Jessie variant for debootstrap don't exist !..."
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 if [ ! -f /etc/ganeti/instance-debootstrap/variants/trusty.conf ]
@@ -1015,7 +1017,15 @@ if [ ! -f /etc/ganeti/instance-debootstrap/variants/trusty.conf ]
 			echo "The Trusty variant for debootstrap don't exist !..."
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
+			exit 1
+fi
+if [ ! -f /etc/ganeti/instance-debootstrap/variants/xenial.conf ]
+	then 	echo
+			echo "The Xenial variant for debootstrap don't exist !..."
+			echo
+			tput bold ; tput setaf 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 if [ ! -f /usr/share/ganeti/os/clone/create ]
@@ -1023,7 +1033,7 @@ if [ ! -f /usr/share/ganeti/os/clone/create ]
 			echo "The Clone configuration go wrong !..."
 			echo
 			tput bold ; tput setaf 1
-		   	echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   	echo "Exit.." ; tput sgr0; echo ; exit 1
 			exit 1
 fi
 
@@ -1050,7 +1060,7 @@ if [ "$DISK_METHOD" == "plain" ]
     				echo "$NODE1 can't receive the VM $VM_NAME"
     				echo
 					tput bold ; tput setaf 1
-		   			echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   			echo "Exit.." ; tput sgr0; echo ; exit 1
     				exit 1
     	fi
     	verif_node2=`gnt-node info $NODE2 |grep "master_capable: True"`
@@ -1061,7 +1071,7 @@ if [ "$DISK_METHOD" == "plain" ]
     				echo "$NODE2 can't receive the VM $VM_NAME"
     				echo
 					tput bold ; tput setaf 1
-		   			echo "Sortie.." ; tput sgr0; echo ; exit 1
+		   			echo "Exit.." ; tput sgr0; echo ; exit 1
     				exit 1
     	fi
 fi
@@ -1161,7 +1171,7 @@ then
 					echo "The /'s LV are bigger than the new VM ! ("$root_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
-		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
+		     		echo "Exit.." ; tput sgr0; echo ; exit 1
 					exit 1
 					fi
 					if [ $swap_clone -gt $SWAP_SIZE ]
@@ -1170,7 +1180,7 @@ then
 					echo "The Swap's LV are bigger than the new VM ! ("$swap_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
-		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
+		     		echo "Exit.." ; tput sgr0; echo ; exit 1
 					exit 1
 					fi
 					if [ $usr_clone -gt $USR_SIZE ]
@@ -1179,7 +1189,7 @@ then
 					echo "The /usr's LV are bigger than the new VM ! ("$usr_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
-		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
+		     		echo "Exit.." ; tput sgr0; echo ; exit 1
 					exit 1
 					fi
 					if [ $var_clone -gt $VAR_SIZE ]
@@ -1188,7 +1198,7 @@ then
 					echo "The /var's LV are bigger than the new VM !  ("$var_clone"G)!"
 					echo
 					tput bold ; tput setaf 1
-		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
+		     		echo "Exit.." ; tput sgr0; echo ; exit 1
 					exit 1
 					fi
 					if [ $vlog_clone -gt $VLOG_SIZE ]
@@ -1197,7 +1207,7 @@ then
 					echo "The /var/log's LV are bigger than the new VM ! ("$vlog_clone"G) !"
 					echo
 					tput bold ; tput setaf 1
-		     		echo "Sortie.." ; tput sgr0; echo ; exit 1
+		     		echo "Exit.." ; tput sgr0; echo ; exit 1
 					exit 1
 					fi
 			fi 
