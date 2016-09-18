@@ -1,7 +1,9 @@
 # Ganeti with Xen and Saltstack
 
 This Ganeti configuration provide **virtual machines on Debian 8 or Ubuntu 14.04** using debootstrap.
+
 You can easily create or clone VMs using **NewVM.sh** script. 
+
 Check it out :
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
 
