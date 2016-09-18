@@ -4,7 +4,6 @@ This Ganeti configuration provide **virtual machines on Debian 8 or Ubuntu 14.04
 
 You can easily create or clone VMs using **NewVM.sh** script. 
 
-Check it out :
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
 
 * **Documentation** <http://ganeti-xen-and-saltstack.readthedocs.org/en/master/>
@@ -32,7 +31,7 @@ Check it out :
 
 **NewVM.sh V0.1** - Create or Clone Virtual Machines
 
-A script for create and clone Virtual Machines simply !
+A script to create and clone virtual machines quite simply !
 
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/newVM.jpg)
 
@@ -81,5 +80,6 @@ Usage: newVM.sh --name <NAME> --disk <DISK> --ram <RAM>
 ## Contact
 
 contact@ouvrard.it
+
 @Valentin_NC
 
