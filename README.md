@@ -1,18 +1,19 @@
 # Ganeti with Xen and Saltstack
 
-This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.04** with debootstrap via an automated script and can make clone of VMs. 
-
+This Ganeti configuration provide **virtual machines on Debian 8 or Ubuntu 14.04** using debootstrap.
+You can easily create or clone VMs using **NewVM.sh** script. 
+Check it out :
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/ganeti-banner1.jpg)
 
 * **Documentation** <http://ganeti-xen-and-saltstack.readthedocs.org/en/master/>
 * **Advanced Tutorial** (French) <http://blog.ouvrard.it/index.php/2015/09/12/cluster-ganeti-xen-saltstack/>
 
 
-## Virtuals Machines configurations
+## Virtual Machines configurations
 
 * **Own /boot** virtual drive
 * **Own kernel** 
-* **LVM configuration** based  
+* **LVM configuration** based 
 * **SWAP partition**
 * **Somes pkgs** like vim, htop, screen, git ...
 
@@ -27,14 +28,14 @@ This Ganeti configuration provide **Virtuals Machines on Debian 8 or Ubuntu 14.0
 
 ## Automated creation and cloning script
 
-**NewVM.sh V0.1** - Create or Clone Virtuals Machines
+**NewVM.sh V0.1** - Create or Clone Virtual Machines
 
-A script for create and clone Virtuals Machines simply !
+A script for create and clone Virtual Machines simply !
 
 ![alt tag](http://blog.ouvrard.it/wp-content/uploads/2015/09/newVM.jpg)
 
 ```
-NewVM.sh v0.1 - Create or Clone Virtuals Machines
+NewVM.sh v0.1 - Create or Clone Virtual Machines
 Author: Valentin OUVRARD
 Usage: newVM.sh --name <NAME> --disk <DISK> --ram <RAM> 
 
@@ -77,7 +78,6 @@ Usage: newVM.sh --name <NAME> --disk <DISK> --ram <RAM>
 
 ## Contact
 
-Ganeti-Github@ouvrard.it
-
+contact@ouvrard.it
 @Valentin_NC
 
