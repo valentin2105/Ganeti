@@ -230,6 +230,11 @@ echo partition-style: $PARTITION_STYLE >> /root/log
 
 cp -p /etc/hosts $TMPDIR/racine/etc/hosts
 cp -p /etc/resolv.conf $TMPDIR/racine/etc/resolv.conf
+
+if [ "$SUITE" == "xenial" ]
+	then cp -p /etc/resolv.conf $TMPDIR/racine/etc/resolvconf/resolv.conf.d/base
+fi
+
 echo $instance > $TMPDIR/racine/etc/hostname
 echo $instance > $TMPDIR/racine/etc/mailname
 
