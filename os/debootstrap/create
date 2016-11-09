@@ -231,6 +231,12 @@ echo partition-style: $PARTITION_STYLE >> /root/log
 cp -p /etc/hosts $TMPDIR/racine/etc/hosts
 cp -p /etc/resolv.conf $TMPDIR/racine/etc/resolv.conf
 
+## Put saltstack script
+
+if [ -f /srv/bootstrap_salt.sh ]
+	cp -p /srv/bootstrap_salt.sh $TMPDIR/racine/root
+fi
+
 if [ "$SUITE" == "xenial" ]
 	then cp -p /etc/resolv.conf $TMPDIR/racine/etc/resolvconf/resolv.conf.d/base
 fi
